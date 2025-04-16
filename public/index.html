@@ -8,12 +8,16 @@
       font-family: 'Segoe UI', sans-serif;
       background: #111;
       color: #eee;
-      margin: 0;
+      /* margin: 0; */
       padding: 2rem;
     }
 
     h1 {
       margin-bottom: 2rem;
+      /*font-size: 2rem; /* 크기 고정 */
+      /*line-height: 1.5; /* 여백 설정 */
+      width: 300px;          /* 고정 너비 */
+      white-space: nowrap;   /* 한 줄 유지 */
     }
 
     .table-wrapper {
@@ -74,6 +78,7 @@
 
     .my-btn:hover {
         background-color: #424242;
+        transform: scale(1.1);
     }
 
     /* header: h1 + btn */
@@ -172,10 +177,18 @@
 <body>
   <div class="header">
       <h1> Real-Time NSK DB </h1>
+      <button class = "my-btn" onclick="location.href='/'" style="background-color: rgb(0, 161, 224);">
+        View Database
+      </button>
+      <!-- <button class = "my-btn" onclick="location.href='/log.html'" style="color: #0ff"> -->
       <button class = "my-btn" onclick="location.href='/log.html'">
         View System Log
       </button>
-      <button class = "my-btn" onclick="toggleSqlPanel()">
+      <!-- <button class = "my-btn" onclick="location.href='/history.html'" style="color: #ff9100"> -->
+      <button class = "my-btn" onclick="location.href='/history.html'">
+        View Event Histories
+      </button>
+      <button class = "my-btn" onclick="toggleSqlPanel()" style="background-color: rgba(21, 255, 0, 0.63);">
         Execute SQL
       </button>
   </div>
@@ -302,6 +315,12 @@
             //     toggleSqlPanel();
             // }
             location.href='/log.html'
+        }
+    });
+    // Shift Tab 시 history 탭으로
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Tab" && e.shiftKey) {
+            location.href='/history.html'
         }
     });
 

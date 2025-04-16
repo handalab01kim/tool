@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>System-Logs</title>
+  <title>Event-Histories</title>
   <style>
     body {
       font-family: monospace;
@@ -13,7 +13,7 @@
 
     h1 {
       font-family: 'Segoe UI', sans-serif;
-      color: #0ff;
+      color: #ff9100;
       margin-bottom: 2rem;
       width: 300px;          /* 고정 너비 */
       white-space: nowrap;   /* 한 줄 유지 */
@@ -101,21 +101,21 @@
 <body>
 
   <div class="header">
-    <h1> System-Logs </h1>
-    <button class = "my-btn" onclick="location.href='/'">
-        View Database
-      </button>
-      <!-- <button class = "my-btn" onclick="location.href='/log.html'" style="color: #0ff"> -->
-      <button class = "my-btn" onclick="location.href='/log.html'" style="background-color: rgb(0, 161, 224);">
-        View System Log
-      </button>
-      <!-- <button class = "my-btn" onclick="location.href='/history.html'" style="color: #ff9100"> -->
-      <button class = "my-btn" onclick="location.href='/history.html'">
-        View Event Histories
-      </button>
-      <!-- <button class = "my-btn" onclick="toggleSqlPanel()" style="background-color: rgba(21, 255, 0, 0.63);">
-        Execute SQL
-      </button> -->
+    <h1> Event-Histories </h1>
+    <button class = "my-btn" onclick="location.href='/'" >
+      View Database
+    </button>
+    <!-- <button class = "my-btn" onclick="location.href='/log.html'" style="color: #0ff"> -->
+    <button class = "my-btn" onclick="location.href='/log.html'">
+      View System Log
+    </button>
+    <!-- <button class = "my-btn" onclick="location.href='/history.html'" style="color: #ff9100"> -->
+    <button class = "my-btn" onclick="location.href='/history.html'" style="background-color: rgb(0, 161, 224);">
+      View Event Histories
+    </button>
+    <!-- <button class = "my-btn" onclick="toggleSqlPanel()" style="background-color: rgba(21, 255, 0, 0.63);">
+      Execute SQL
+    </button> -->
   </div>
   <div id="table-container">Loading...</div>
   <div class="pagination" id="pagination"></div>
@@ -128,7 +128,7 @@
     let totalPages = 1;
 
     async function fetchLogs() {
-        const res = await fetch(`/systemlog?page=${page}&limit=${limit}`);
+        const res = await fetch(`/histories?page=${page}&limit=${limit}`);
         const data = await res.json();
 
         const container = document.getElementById('table-container');
@@ -157,11 +157,11 @@
         let colgroup = '<colgroup>';
         headers.forEach((_, index) => {
         if (index === 2) {
-            colgroup += '<col style="width: 400px;">'; // message 넓게
+            colgroup += '<col style="width: 400px;">'; 
         } else if (index === 3){
-            colgroup += '<col style="width: 60px;">'; // time 딱 맞게
+            colgroup += '<col style="width: 60px;">'; 
         } else{
-            colgroup += '<col style="width: 30px;">'; // 그 외 좁게
+            colgroup += '<col style="width: 30px;">'; 
         }
         });
         colgroup += '</colgroup>';
@@ -244,15 +244,15 @@
 
     // Tab 시 페이지 이동
     document.addEventListener("keydown", (e) => {
-        if (e.key === "Tab") {
-            location.href='/history.html'
-        }
+      if (e.key === "Tab") {
+        location.href='/'
+      }
     });
-    // Shift Tab 시 index 탭으로
+    // Shift Tab 시 log 탭으로
     document.addEventListener("keydown", (e) => {
-        if (e.key === "Tab" && e.shiftKey) {
-            location.href='/'
-        }
+      if (e.key === "Tab" && e.shiftKey) {
+        location.href='/log.html'
+      }
     });
   </script>
 </body>

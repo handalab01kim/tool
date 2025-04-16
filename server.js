@@ -69,14 +69,11 @@ app.get('/histories', async (req, res) => {
     };
   
     try {
-      const countQuery = `SELECT COUNT(*) FROM history`;
-      const dataQuery = `SELECT idx, id, name, to_char(time, 'YYYY-MM-DD HH24:MI:SS.MS') time FROM private.systemlog ORDER BY idx DESC LIMIT $1 OFFSET $2`;
+      const countQuery = `SELECT COUNT(*) FROM public."history"`;
+      const dataQuery = `SELECT idx, id, name, to_char(time, 'YYYY-MM-DD HH24:MI:SS.MS') time FROM public."history" ORDER BY idx DESC LIMIT $1 OFFSET $2`;
   
-      console.log("TEST!")
       const countResult = await pool.query(countQuery);
-      console.log("TEST@")
       const dataResult = await pool.query(dataQuery, [limit, offset]);
-      console.log("TEST$")
   
       result.total = parseInt(countResult.rows[0].count);
       result.rows = dataResult.rows;
