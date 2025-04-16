@@ -278,6 +278,33 @@
         }
     });
 
+    // ESC로 창 닫음
+    // document.getElementById("sql-input").addEventListener("keydown", (e)=>{
+    //     if(e.key === "Escape"){
+    //         toggleSqlPanel();
+    //     }
+    // });
+    // 전역 적용
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            const panel = document.getElementById("sql-panel");
+            if (panel.style.display === "block") {
+                toggleSqlPanel();
+            }
+        }
+    });
+
+    // Tab 시 log 탭으로
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Tab") {
+            // const panel = document.getElementById("sql-panel");
+            // if (panel.style.display === "block") {
+            //     toggleSqlPanel();
+            // }
+            location.href='/log.html'
+        }
+    });
+
   
     function showToast(msg, error = false) {
       const toast = document.getElementById("toast");
