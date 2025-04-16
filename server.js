@@ -45,7 +45,8 @@ app.get('/systemlog', async (req, res) => {
   
     try {
       const countQuery = `SELECT COUNT(*) FROM private.systemlog`;
-      const dataQuery = `SELECT * FROM private.systemlog ORDER BY idx DESC LIMIT $1 OFFSET $2`;
+    //   const dataQuery = `SELECT idx, process, message, to_char(time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS.MS') time FROM private.systemlog ORDER BY idx DESC LIMIT $1 OFFSET $2`;
+      const dataQuery = `SELECT idx, process, message, to_char(time, 'YYYY-MM-DD HH24:MI:SS.MS') time FROM private.systemlog ORDER BY idx DESC LIMIT $1 OFFSET $2`;
   
       const countResult = await pool.query(countQuery);
       const dataResult = await pool.query(dataQuery, [limit, offset]);
@@ -55,6 +56,34 @@ app.get('/systemlog', async (req, res) => {
   
       res.json(result);
     } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/histories', async (req, res) => {
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+    const result = {
+      rows: [],
+      total: 0
+    };
+  
+    try {
+      const countQuery = `SELECT COUNT(*) FROM history`;
+      const dataQuery = `SELECT idx, id, name, to_char(time, 'YYYY-MM-DD HH24:MI:SS.MS') time FROM private.systemlog ORDER BY idx DESC LIMIT $1 OFFSET $2`;
+  
+      console.log("TEST!")
+      const countResult = await pool.query(countQuery);
+      console.log("TEST@")
+      const dataResult = await pool.query(dataQuery, [limit, offset]);
+      console.log("TEST$")
+  
+      result.total = parseInt(countResult.rows[0].count);
+      result.rows = dataResult.rows;
+  
+      res.json(result);
+    } catch (err) {
+        console.log(err);
       res.status(500).json({ error: err.message });
     }
 });

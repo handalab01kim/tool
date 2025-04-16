@@ -143,9 +143,11 @@
         let colgroup = '<colgroup>';
         headers.forEach((_, index) => {
         if (index === 2) {
-            colgroup += '<col style="width: 400px;">'; // 3번째 열만 넓게
-        } else {
-            colgroup += '<col style="width: 100px;">'; // 나머지는 좁게
+            colgroup += '<col style="width: 400px;">'; // message 넓게
+        } else if (index === 3){
+            colgroup += '<col style="width: 60px;">'; // time 딱 맞게
+        } else{
+            colgroup += '<col style="width: 30px;">'; // 그 외 좁게
         }
         });
         colgroup += '</colgroup>';
@@ -226,10 +228,6 @@
         }
     });
 
-
-
-  </script>
-  <script>
     // Tab 시 페이지 이동
     document.addEventListener("keydown", (e) => {
         if (e.key === "Tab") {
