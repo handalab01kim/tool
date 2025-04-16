@@ -106,8 +106,9 @@
 
     const limit = 20;
     let currentPage = 1;
+    let page = 1;
 
-    async function fetchLogs(page = 1) {
+    async function fetchLogs() {
         const res = await fetch(`/systemlog?page=${page}&limit=${limit}`);
         const data = await res.json();
 
@@ -140,7 +141,7 @@
         if (startPage > 1) {
             const first = document.createElement('button');
             first.innerText = '« First';
-            first.onclick = () => fetchLogs(1);
+            first.onclick = () => {page=1;fetchLogs()};
             pagination.appendChild(first);
         }
 
@@ -148,7 +149,7 @@
         if (startPage > 1) {
             const prev = document.createElement('button');
             prev.innerText = '◀ Prev';
-            prev.onclick = () => fetchLogs(startPage - 1);
+            prev.onclick = () => {page=startPage-1;fetchLogs()};
             pagination.appendChild(prev);
         }
 
@@ -157,7 +158,7 @@
             const btn = document.createElement('button');
             btn.innerText = i;
             if (i === page) btn.classList.add('active');
-            btn.onclick = () => fetchLogs(i);
+            btn.onclick = () => {page=i;fetchLogs()};
             pagination.appendChild(btn);
         }
 
@@ -165,7 +166,7 @@
         if (endPage < totalPages) {
             const next = document.createElement('button');
             next.innerText = 'Next ▶';
-            next.onclick = () => fetchLogs(endPage + 1);
+            next.onclick = () => {page=endPage+1;fetchLogs()};
             pagination.appendChild(next);
         }
 
@@ -173,7 +174,7 @@
         if (endPage < totalPages) {
             const last = document.createElement('button');
             last.innerText = 'Last »';
-            last.onclick = () => fetchLogs(totalPages);
+            last.onclick = () => {page=totalPages;fetchLogs()};
             pagination.appendChild(last);
         }
 
@@ -181,7 +182,7 @@
     }
 
 
-    setInterval(fetchLogs, 100);
+    setInterval(fetchLogs, 1000);
     fetchLogs();
   </script>
 </body>
