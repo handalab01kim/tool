@@ -2,10 +2,7 @@ const io = require("socket.io-client")
 
 console.log("sockets on!")
 
-const ANALYSIS_IP = "192.168.1.21";
-const UI_SERVER_IP = "192.168.1.22";
-
-
+const {ANALYSIS_IP, UI_SERVER_IP} = require("./config");
 
 const timezone = (date) =>{
     return date.toLocaleString("ko-KR", {
