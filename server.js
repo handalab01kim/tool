@@ -15,6 +15,11 @@ app.use(express.static('public')); // index.html
 app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));  
 
+app.get("/ip", (req,res)=>{
+  res.send(db.host);
+});
+
+
 app.get('/data', async (req, res) => {
   const result = {};
 
@@ -34,6 +39,7 @@ app.get('/data', async (req, res) => {
 
   res.json(result);
 });
+
 
 app.get('/systemlog', async (req, res) => {
     const { page = 1, limit = 20 } = req.query;

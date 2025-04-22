@@ -16,7 +16,7 @@
       margin-bottom: 2rem;
       /*font-size: 2rem; /* 크기 고정 */
       /*line-height: 1.5; /* 여백 설정 */
-      width: 300px;          /* 고정 너비 */
+      width: 500px;          /* 고정 너비 */
       white-space: nowrap;   /* 한 줄 유지 */
     }
 
@@ -251,6 +251,23 @@
 
     setInterval(fetchData, 100);
     fetchData();
+
+    // fetch('/ip')
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     const ip = data.ip; 
+    //     document.getElementById('h1').innerText = `Real-Time NSK DB (${ip})`;
+    //   })
+    //   .catch(error => {
+    //     console.error('IP 가져오기 실패:', error);
+    //   });
+    fetch('/ip')
+      .then(res => res.text()) // JSON이면 .json(), 문자열이면 .text()
+      .then(ip => {
+        const h1 = document.querySelector('h1'); // id 없이 첫 번째 h1 선택
+        h1.innerText = `Real-Time NSK DB (${ip})`;
+      })
+      .catch(err => console.error('IP 가져오기 실패:', err));
   </script>
 
 

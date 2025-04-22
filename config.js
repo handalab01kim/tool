@@ -1,7 +1,7 @@
 module.exports = {
     db: {
       user: 'handalab',
-      host: '172.30.1.202',
+      host: '172.30.1.22',
       database: 'nsk',
       password: 'handalab',
       port: 5432,
