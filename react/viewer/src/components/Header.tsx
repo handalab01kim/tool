@@ -128,9 +128,10 @@ const Header = () => {
     if (urlLocation.pathname === `/${LOG_PATH}`) {
       return "System Log";
     }
-    if (urlLocation.pathname === `/${LOG_PATH}`) {
+    if (urlLocation.pathname === `/${HISTORY_PATH}`) {
       return "Event Histories";
     }
+    console.log("뭐냐면~", urlLocation.pathname);
     return "Real-Time NSK DB";
   };
 

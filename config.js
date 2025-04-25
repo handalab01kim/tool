@@ -1,9 +1,9 @@
 module.exports = {
     db: {
-      user: 'handalab',
-      host: '172.30.1.202',
-      database: 'nsk',
-      password: 'handalab',
+      user: 'postgres',
+      host: 'localhost',
+      database: 'noto',
+      password: '0000',
       port: 5432,
     },
     tablesToWatch: ['member', 'channel_info', 'channel_status', 'channel_roi'], // 메인 뷰 테이블 리스트

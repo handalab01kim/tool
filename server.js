@@ -26,10 +26,11 @@ app.get('/data', async (req, res) => {
   for (let table of tablesToWatch) {
     try {
         let query;
-        if(table!=="member")
-            query = `SELECT * FROM "${table}" ORDER BY id ASC;`;
-        else
-            query = `SELECT * FROM "${table}" ORDER BY admin DESC, email ASC;`;
+        // if(table!=="member")
+        //     query = `SELECT * FROM "${table}" ORDER BY id ASC;`;
+        // else
+            // query = `SELECT * FROM "${table}" ORDER BY admin DESC, email ASC;`;
+            query = `SELECT * FROM "${table}";`;
       const { rows } = await pool.query(query);
       result[table] = rows;
     } catch (err) {
@@ -66,29 +67,78 @@ app.get('/systemlog', async (req, res) => {
     }
 });
 
+let temp = false;
 app.get('/histories', async (req, res) => {
-    const { page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
-    const result = {
+  temp=!temp;
+  if(temp)
+    console.log("요청 옴!!")
+  else
+    console.log("요청 옴 2!!!!");
+  const { page = 1, limit = 20 } = req.query;
+  const offset = (page - 1) * limit;
+  tableName = "member";
+  if (!tableName) {
+      return res.status(400).json({ error: 'Table name is required' });
+  }
+
+  const result = {
       rows: [],
       total: 0
-    };
-  
-    try {
-      const countQuery = `SELECT COUNT(*) FROM public."history"`;
-      const dataQuery = `SELECT idx, id, name, to_char(time, 'YYYY-MM-DD HH24:MI:SS.MS') time FROM public."history" ORDER BY idx DESC LIMIT $1 OFFSET $2`;
-  
+  };
+
+  try {
+      // 1. 테이블의 primary key 컬럼 찾기
+      const pkQuery = `
+        SELECT column_name
+        FROM information_schema.key_column_usage
+        WHERE table_name = $1 AND constraint_name = 'PRIMARY'
+      `;
+      const pkResult = await pool.query(pkQuery, [tableName]);
+      const pkColumn = pkResult.rows[0]?.column_name;
+
+      // 2. 테이블의 timestamp 컬럼 찾기
+      const timestampQuery = `
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = $1 AND data_type IN ('timestamp', 'timestamp without time zone')
+      `;
+      const timestampResult = await pool.query(timestampQuery, [tableName]);
+      const timestampColumns = timestampResult.rows.map(row => row.column_name);
+
+      // 3. 데이터 조회 쿼리 작성
+      let selectColumns = '*';  // 기본적으로 모든 컬럼 선택
+      let orderBy = pkColumn ? `${pkColumn} DESC` : '';  // Primary key가 없으면 ORDER BY 생략
+      let timestampFormatted = '';
+
+      // 만약 timestamp 컬럼이 있으면, 이를 포맷팅하여 SELECT 절에 추가
+      if (timestampColumns.length > 0) {
+          timestampFormatted = timestampColumns.map(col => 
+              `to_char(${col}, 'YYYY-MM-DD HH24:MI:SS.MS') AS ${col}`
+          ).join(', ');
+          selectColumns = `${selectColumns}, ${timestampFormatted}`;
+      }
+
+      // 4. 데이터와 카운트 쿼리
+      const countQuery = `SELECT COUNT(*) FROM public."${tableName}"`;
+      const dataQuery = `
+        SELECT ${selectColumns}
+        FROM public."${tableName}"
+        ${orderBy ? `ORDER BY ${orderBy}` : ''}
+        LIMIT $1 OFFSET $2
+      `;
+
+      // 5. 데이터 조회 및 응답 처리
       const countResult = await pool.query(countQuery);
       const dataResult = await pool.query(dataQuery, [limit, offset]);
-  
+
       result.total = parseInt(countResult.rows[0].count);
       result.rows = dataResult.rows;
-  
+
       res.json(result);
-    } catch (err) {
-        console.log(err);
+  } catch (err) {
+      console.log(err);
       res.status(500).json({ error: err.message });
-    }
+  }
 });
 
 
