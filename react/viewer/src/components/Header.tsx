@@ -109,8 +109,7 @@ const Overlay = styled.div<{ isVisible: boolean }>`
   display: ${(props) => (props.isVisible ? 'block' : 'none')};
 `;
 
-const LOG_PATH = "log";
-const HISTORY_PATH = "history";
+import {LOG_PATH,HISTORY_PATH} from "../api/path";
 
 const Header = () => {
   const urlLocation = useLocation();  // 현재 경로 추적
@@ -125,10 +124,10 @@ const Header = () => {
     if (urlLocation.pathname === "/") {
       return `Real-Time NSK DB ${ip && `(${ip})`}`;
     }
-    if (urlLocation.pathname === `/${LOG_PATH}`) {
+    if (urlLocation.pathname === LOG_PATH) {
       return "System Log";
     }
-    if (urlLocation.pathname === `/${HISTORY_PATH}`) {
+    if (urlLocation.pathname === HISTORY_PATH) {
       return "Event Histories";
     }
     // console.log("location.pathname: ", urlLocation.pathname);
@@ -208,14 +207,14 @@ const Header = () => {
         View Database
       </Button>
       <Button
-        active={location.pathname === `/${LOG_PATH}`}  // 현재 경로에 따라 활성화 색상 변경
-        onClick={() => navigate(`/${LOG_PATH}`)}
+        active={location.pathname === LOG_PATH}  // 현재 경로에 따라 활성화 색상 변경
+        onClick={() => navigate(LOG_PATH)}
       >
         View System Log
       </Button>
       <Button
-        active={location.pathname === `/${HISTORY_PATH}`}  // 현재 경로에 따라 활성화 색상 변경
-        onClick={() => navigate(`/${HISTORY_PATH}`)}
+        active={location.pathname === HISTORY_PATH}  // 현재 경로에 따라 활성화 색상 변경
+        onClick={() => navigate(HISTORY_PATH)}
       >
         View Event Histories
       </Button>

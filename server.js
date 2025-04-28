@@ -67,11 +67,10 @@ app.get('/systemlog', async (req, res) => {
     }
 });
 
-app.get('/histories', async (req, res) => {
-  const { page = 1, limit = 20 } = req.query;
+app.get('/get-table', async (req, res) => {
+  const { page = 1, limit = 20, table } = req.query;
   const offset = (page - 1) * limit;
-  tableName = "history";
-  if (!tableName) {
+  if (!table) {
       return res.status(400).json({ error: 'Table name is required' });
   }
 
@@ -87,7 +86,7 @@ app.get('/histories', async (req, res) => {
         FROM information_schema.key_column_usage
         WHERE table_name = $1 AND constraint_name = 'PRIMARY'
       `;
-      const pkResult = await pool.query(pkQuery, [tableName]);
+      const pkResult = await pool.query(pkQuery, [table]);
       const pkColumn = pkResult.rows[0]?.column_name;
 
       // 2. 테이블의 timestamp 컬럼 찾기
@@ -96,7 +95,7 @@ app.get('/histories', async (req, res) => {
         FROM information_schema.columns
         WHERE table_name = $1 AND data_type IN ('timestamp', 'timestamp without time zone')
       `;
-      const timestampResult = await pool.query(timestampQuery, [tableName]);
+      const timestampResult = await pool.query(timestampQuery, [table]);
       const timestampColumns = timestampResult.rows.map(row => row.column_name);
 
       // 3. 데이터 조회 쿼리 작성
@@ -113,10 +112,12 @@ app.get('/histories', async (req, res) => {
       }
 
       // 4. 데이터와 카운트 쿼리
-      const countQuery = `SELECT COUNT(*) FROM public."${tableName}"`;
+      // const countQuery = `SELECT COUNT(*) FROM public."${table}"`;
+      const countQuery = `SELECT COUNT(*) FROM ${table}`;
+      // FROM public."${table}"
       const dataQuery = `
         SELECT ${selectColumns}
-        FROM public."${tableName}"
+        FROM ${table}
         ${orderBy ? `ORDER BY ${orderBy}` : ''}
         LIMIT $1 OFFSET $2
       `;

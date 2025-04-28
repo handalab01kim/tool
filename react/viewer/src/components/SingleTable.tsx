@@ -69,10 +69,10 @@ interface ApiResponse {
 const limit = 20;
 
 interface SignleTableProps{
-  api:string;
+  table:string;
 }
 
-export default function SingleTable({api}:SignleTableProps) {
+export default function SingleTable({table}:SignleTableProps) {
   const [rows, setRows] = useState<RowData[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -86,8 +86,8 @@ export default function SingleTable({api}:SignleTableProps) {
 
   const fetchData = async (currentPage = page) => {
     try {
-      const res = await axios.get<ApiResponse>(`${BASE_URL}/${api}`, {
-        params: { page: currentPage, limit },
+      const res = await axios.get<ApiResponse>(`${BASE_URL}/get-table`, {
+        params: { page: currentPage, limit, table },
       });
       setRows(res.data.rows);
       setTotal(res.data.total);
@@ -109,7 +109,7 @@ useEffect(() => {
     }, 1000);
   
     return () => clearInterval(interval);
-  }, [page]);  // 빈 배열로 설정하여 컴포넌트 마운트 시 한 번만 실행
+  }, [page, table]);  // 빈 배열로 설정하여 컴포넌트 마운트 시 한 번만 실행
 
   // useEffect(() => {
   //   // 페이지 변경 시마다 데이터 갱신
