@@ -1,9 +1,157 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-import {BASE_URL} from "../api/config";
-
 import { useLocation, useNavigate } from 'react-router-dom';
+
+import {BASE_URL} from "../api/config";
+import {LOG_PATH,HISTORY_PATH} from "../api/path";
+
+export default function(){
+  const urlLocation = useLocation();  // 현재 경로 추적
+  const navigate = useNavigate();  // navigate 사용
+
+  const [ip, setIp] = useState<string>("localhost");
+  const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [isOk, setIsOk] = useState<boolean>(false);
+
+  const getTitle = () => {
+    if (urlLocation.pathname === "/") {
+      return `Real-Time NSK DB ${ip && `(${ip})`}`;
+    }
+    if (urlLocation.pathname === LOG_PATH) {
+      return "System Log";
+    }
+    if (urlLocation.pathname === HISTORY_PATH) {
+      return "Event Histories";
+    }
+    // console.log("location.pathname: ", urlLocation.pathname);
+    return "Real-Time NSK DB";
+  };
+
+  const toggleSqlPanel = () => {
+    setIsSqlPanelVisible((prevState) => !prevState);
+  };
+
+  const sendSql = async () => {
+    const query = (document.getElementById("sql-input") as HTMLTextAreaElement).value;
+    if (!query.trim()) return;
+    
+    try {
+      const res = await axios.post(`${BASE_URL}/execute-sql`, { query });
+      if (res.status === 200) {
+        setToastMessage("SQL 실행 성공!");
+        setIsOk(true); // sql 성공
+        const data = res.data; 
+        console.log(data.result.rows);
+      } else {
+        setIsOk(false); // sql 실패
+        setToastMessage("실행 실패!");
+      }
+    } catch (error) {
+      setIsOk(false); // sql 실패
+      setToastMessage("실행 실패!");
+      console.error("SQL 실행 중 오류 발생:", error);
+    } finally {
+      // 토스트 3초 뒤 제거
+      setTimeout(() => {
+        setToastMessage("");
+      }, 3000);
+    }
+  };
+
+  // 가리키는 DB의 HOST(IP) 받아오기
+  useEffect(()=>{
+    axios.get(`${BASE_URL}/ip`)
+    .then(res => {
+      setIp(res.data);
+    })
+    .catch(err => console.error('IP 가져오기 실패:', err));
+  }, []);
+
+  // SQL 패널 관련 단축키
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isSqlPanelVisible) {
+        toggleSqlPanel();  // ESC 키로 SQL 패널 닫음
+        return;
+      }
+      const inputElement = document.getElementById("sql-input") as HTMLTextAreaElement;
+      if (e.ctrlKey && e.key === "Enter" && inputElement === document.activeElement) {
+        sendSql();  // Ctrl + Enter 입력 시 SQL 쿼리 전송(실행)
+        return;
+      }
+    };
+  
+    document.addEventListener("keydown", handleEscKey);
+  
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);  // cleanup
+    };
+  }, [isSqlPanelVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
+  
+  // Tab / Shift+Tab으로 탭 전환
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const paths = ['/', LOG_PATH, HISTORY_PATH];
+      const currentIndex = paths.indexOf(location.pathname);
+  
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        const nextIndex = (currentIndex + 1) % paths.length;
+        navigate(paths[nextIndex]);
+      } else if (e.key === 'Tab' && e.shiftKey) {
+        e.preventDefault();
+        const prevIndex = (currentIndex - 1 + paths.length) % paths.length;
+        navigate(paths[prevIndex]);
+      }
+    };
+  
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [location.pathname, navigate]);
+  
+
+  return (
+    <HeaderWrapper>
+      <Title>{getTitle()}</Title>
+      {/* <Button bgColor="#00a1e0" onClick={() => (location.href = '/')}>View Database</Button> */}
+      <Button 
+        active={location.pathname === "/"}
+        onClick={() => navigate('/')}
+      >
+        View Database
+      </Button>
+      <Button
+        active={location.pathname === LOG_PATH}  // 현재 위치한 경로에 해당하는는 버튼 색상 변경
+        onClick={() => navigate(LOG_PATH)}
+      >
+        View System Log
+      </Button>
+      <Button
+        active={location.pathname === HISTORY_PATH}  
+        onClick={() => navigate(HISTORY_PATH)}
+      >
+        View Event Histories
+      </Button>
+      <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={toggleSqlPanel}>Execute SQL</Button>
+      <SqlPanel isVisible={isSqlPanelVisible}>
+        <SqlHeader>
+          <strong>SQL Query Executer</strong>
+          <SqlButton onClick={toggleSqlPanel}>X</SqlButton>
+        </SqlHeader>
+        {/* <SqlTextArea placeholder='ex: SELECT now();'>update member set nickname='test' where email='user1@nsk.com' returning *;</SqlTextArea> */}
+        <SqlTextArea id="sql-input" placeholder='ex: SELECT now();'/>
+        <SqlButton onClick={sendSql}>확인</SqlButton>
+      </SqlPanel>
+      <Overlay isVisible={isSqlPanelVisible} onClick={toggleSqlPanel}/>
+      <Toast isOk = {isOk} isVisible={toastMessage !== ""}>{toastMessage}</Toast> 
+    </HeaderWrapper>
+  );
+};
+
+// export default Header;
+
 
 const HeaderWrapper = styled.div`
   display: flex;
@@ -108,149 +256,3 @@ const Overlay = styled.div<{ isVisible: boolean }>`
   z-index: 998;
   display: ${(props) => (props.isVisible ? 'block' : 'none')};
 `;
-
-import {LOG_PATH,HISTORY_PATH} from "../api/path";
-
-const Header = () => {
-  const urlLocation = useLocation();  // 현재 경로 추적
-  const navigate = useNavigate();  // navigate 사용
-
-  const [ip, setIp] = useState<string>("localhost");
-  const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
-  const [toastMessage, setToastMessage] = useState<string>("");
-  const [isOk, setIsOk] = useState<boolean>(false);
-
-  const getTitle = () => {
-    if (urlLocation.pathname === "/") {
-      return `Real-Time NSK DB ${ip && `(${ip})`}`;
-    }
-    if (urlLocation.pathname === LOG_PATH) {
-      return "System Log";
-    }
-    if (urlLocation.pathname === HISTORY_PATH) {
-      return "Event Histories";
-    }
-    // console.log("location.pathname: ", urlLocation.pathname);
-    return "Real-Time NSK DB";
-  };
-
-  const toggleSqlPanel = () => {
-    setIsSqlPanelVisible((prevState) => !prevState);
-  };
-
-  const sendSql = async () => {
-    const query = (document.getElementById("sql-input") as HTMLTextAreaElement).value;
-    if (!query.trim()) return;
-    
-    try {
-      const res = await axios.post(`${BASE_URL}/execute-sql`, { query });
-      if (res.status === 200) {
-        setToastMessage("SQL 실행 성공!");
-        setIsOk(true); // sql 성공
-        const data = res.data; 
-        console.log(data.result.rows);
-      } else {
-        setIsOk(false); // sql 실패
-        setToastMessage("실행 실패!");
-      }
-    } catch (error) {
-      setIsOk(false); // sql 실패
-      setToastMessage("실행 실패!");
-      console.error("SQL 실행 중 오류 발생:", error);
-    } finally {
-      // Hide toast after 3 seconds
-      setTimeout(() => {
-        setToastMessage("");
-      }, 3000);
-    }
-  };
-
-  useEffect(()=>{
-    axios.get(`${BASE_URL}/ip`)
-    .then(res => {
-      setIp(res.data);
-    })
-    .catch(err => console.error('IP 가져오기 실패:', err));
-  }, []);
-
-  useEffect(() => {
-    // ESC 키로 SQL 패널 닫기
-    const handleEscKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isSqlPanelVisible) {
-        toggleSqlPanel();  // SQL 패널을 닫음
-        return;
-      }
-      const inputElement = document.getElementById("sql-input") as HTMLTextAreaElement;
-      if (e.ctrlKey && e.key === "Enter" && inputElement === document.activeElement) {
-        sendSql();  // Ctrl + Enter 입력 시 SQL 전송
-        return;
-      }
-    };
-  
-    document.addEventListener("keydown", handleEscKey);
-  
-    return () => {
-      document.removeEventListener("keydown", handleEscKey);  // cleanup
-    };
-  }, [isSqlPanelVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
-  
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const paths = ['/', LOG_PATH, HISTORY_PATH];
-      const currentIndex = paths.indexOf(location.pathname);
-  
-      if (e.key === 'Tab' && !e.shiftKey) {
-        e.preventDefault();
-        const nextIndex = (currentIndex + 1) % paths.length;
-        navigate(paths[nextIndex]);
-      } else if (e.key === 'Tab' && e.shiftKey) {
-        e.preventDefault();
-        const prevIndex = (currentIndex - 1 + paths.length) % paths.length;
-        navigate(paths[prevIndex]);
-      }
-    };
-  
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [location.pathname, navigate]);
-  
-
-  return (
-    <HeaderWrapper>
-      <Title>{getTitle()}</Title>
-      {/* <Button bgColor="#00a1e0" onClick={() => (location.href = '/')}>View Database</Button> */}
-      <Button 
-        active={location.pathname === "/"}
-        onClick={() => navigate('/')}
-      >
-        View Database
-      </Button>
-      <Button
-        active={location.pathname === LOG_PATH}  // 현재 경로에 따라 활성화 색상 변경
-        onClick={() => navigate(LOG_PATH)}
-      >
-        View System Log
-      </Button>
-      <Button
-        active={location.pathname === HISTORY_PATH}  // 현재 경로에 따라 활성화 색상 변경
-        onClick={() => navigate(HISTORY_PATH)}
-      >
-        View Event Histories
-      </Button>
-      <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={toggleSqlPanel}>Execute SQL</Button>
-      <SqlPanel isVisible={isSqlPanelVisible}>
-        <SqlHeader>
-          <strong>SQL Query Executer</strong>
-          <SqlButton onClick={toggleSqlPanel}>X</SqlButton>
-        </SqlHeader>
-        {/* <SqlTextArea placeholder='ex: SELECT now();'>update member set nickname='test' where email='user1@nsk.com' returning *;</SqlTextArea> */}
-        <SqlTextArea id="sql-input" placeholder='ex: SELECT now();'/>
-        <SqlButton onClick={sendSql}>확인</SqlButton>
-      </SqlPanel>
-      <Overlay isVisible={isSqlPanelVisible} onClick={toggleSqlPanel}/>
-      <Toast isOk = {isOk} isVisible={toastMessage !== ""}>{toastMessage}</Toast> 
-    </HeaderWrapper>
-  );
-};
-
-export default Header;

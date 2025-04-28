@@ -1,53 +1,7 @@
-// DataPanel.tsx
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { BASE_URL } from "../api/config";
 import axios from "axios";
-
-const Wrapper = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-`;
-
-const TableBlock = styled.div`
-  background: #1c1c1c;
-  padding: 1rem;
-  border-radius: 8px;
-  min-width: 300px;
-  max-width: 100%;
-  overflow-x: auto;
-`;
-
-const TableTitle = styled.h2`
-  margin-top: 0;
-  font-size: 1.2rem;
-  color: #0f0;
-`;
-
-const StyledTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const Th = styled.th`
-  background: #333;
-  border: 1px solid #333;
-  padding: 0.5rem;
-  text-align: left;
-  white-space: nowrap;
-`;
-
-const Td = styled.td`
-  background: #222;
-  border: 1px solid #333;
-  padding: 0.5rem;
-  white-space: nowrap;
-`;
-
-const ErrorMsg = styled.p`
-  color: red;
-`;
+import { BASE_URL } from "../api/config";
 
 type Data = Record<string, Array<Record<string, any>> | { error: string }>;
 
@@ -123,3 +77,48 @@ export default function DataPanel() {
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+`;
+
+const TableBlock = styled.div`
+  background: #1c1c1c;
+  padding: 1rem;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 100%;
+  overflow-x: auto;
+`;
+
+const TableTitle = styled.h2`
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #0f0;
+`;
+
+const StyledTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+`;
+
+const Th = styled.th`
+  background: #333;
+  border: 1px solid #333;
+  padding: 0.5rem;
+  text-align: left;
+  white-space: nowrap;
+`;
+
+const Td = styled.td`
+  background: #222;
+  border: 1px solid #333;
+  padding: 0.5rem;
+  white-space: nowrap;
+`;
+
+const ErrorMsg = styled.p`
+  color: red;
+`;

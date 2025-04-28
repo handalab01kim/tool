@@ -3,75 +3,18 @@ import styled from "styled-components";
 import axios from "axios";
 import { BASE_URL } from "../api/config";
 
-const Container = styled.div`
-  font-family: monospace;
-  background: #111;
-  color: #eee;
-  // padding: 1rem;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-  table-layout: fixed;
-`;
-
-const Th = styled.th`
-  background: #222;
-  border: 1px solid #444;
-  padding: 0.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 120px;
-  position: sticky;
-  top: 0;
-`;
-
-const Td = styled.td`
-  background: #1a1a1a;
-  border: 1px solid #444;
-  padding: 0.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 120px;
-`;
-
-const Pagination = styled.div`
-  margin-top: 1rem;
-  text-align: center;
-`;
-
-const PageButton = styled.button<{ active?: boolean }>`
-  background: ${({ active }) => (active ? "#0f0" : "#333")};
-  color: ${({ active }) => (active ? "#111" : "#eee")};
-  border: none;
-  padding: 0.5rem 1rem;
-  margin: 0 0.25rem;
-  cursor: pointer;
-
-  &:hover {
-    background: #555;
-  }
-`;
-
 interface RowData {
   [key: string]: any;
 }
-
 interface ApiResponse {
   rows: RowData[];
   total: number;
 }
-
-const limit = 20;
-
 interface SignleTableProps{
   table:string;
   primary:string;
 }
+const limit = 20;
 
 export default function SingleTable({table, primary}:SignleTableProps) {
   const [rows, setRows] = useState<RowData[]>([]);
@@ -107,7 +50,7 @@ useEffect(() => {
   fetchData(page);
     const interval = setInterval(() => {
       fetchData(page);  // 페이지 변경에 관계없이 주기적으로 데이터 갱신
-    }, 1000);
+    }, 200);
   
     return () => clearInterval(interval);
   }, [page, table]);  // 빈 배열로 설정하여 컴포넌트 마운트 시 한 번만 실행
@@ -206,3 +149,58 @@ useEffect(() => {
     </Container>
   );
 }
+
+
+const Container = styled.div`
+  font-family: monospace;
+  background: #111;
+  color: #eee;
+  // padding: 1rem;
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  table-layout: fixed;
+`;
+
+const Th = styled.th`
+  background: #222;
+  border: 1px solid #444;
+  padding: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 120px;
+  position: sticky;
+  top: 0;
+`;
+
+const Td = styled.td`
+  background: #1a1a1a;
+  border: 1px solid #444;
+  padding: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 120px;
+`;
+
+const Pagination = styled.div`
+  margin-top: 1rem;
+  text-align: center;
+`;
+
+const PageButton = styled.button<{ active?: boolean }>`
+  background: ${({ active }) => (active ? "#0f0" : "#333")};
+  color: ${({ active }) => (active ? "#111" : "#eee")};
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem;
+  cursor: pointer;
+
+  &:hover {
+    background: #555;
+  }
+`;

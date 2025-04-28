@@ -9,53 +9,7 @@ interface Props {
   onError: () => void;
 }
 
-// Panel을 styled.div로 정의
-const Panel = styled.div`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 999;
-  background: #1c1c1c;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 1rem;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-  box-sizing: border-box;
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  color: #0f0;
-`;
-
-const Textarea = styled.textarea`
-  width: 97%;
-  height: 120px;
-  background: #000;
-  color: #0f0;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 0.5rem;
-  font-family: monospace;
-  resize: vertical;
-`;
-
-const Button = styled.button`
-  background: #333;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-`;
-
-const SqlPanel = ({ visible, onClose, onSuccess, onError }: Props) => {
+export default function({ visible, onClose, onSuccess, onError }: Props){
   const [query, setQuery] = useState('');
 
   const handleQueryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -104,4 +58,47 @@ const SqlPanel = ({ visible, onClose, onSuccess, onError }: Props) => {
   );
 };
 
-export default SqlPanel;
+const Panel = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  background: #1c1c1c;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  box-sizing: border-box;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  color: #0f0;
+`;
+
+const Textarea = styled.textarea`
+  width: 97%;
+  height: 120px;
+  background: #000;
+  color: #0f0;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-family: monospace;
+  resize: vertical;
+`;
+
+const Button = styled.button`
+  background: #333;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+`;
