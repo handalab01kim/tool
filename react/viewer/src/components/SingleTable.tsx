@@ -4,7 +4,10 @@ import axios from "axios";
 import { BASE_URL } from "../api/config";
 
 const Container = styled.div`
-//   padding: 1rem;
+  font-family: monospace;
+  background: #111;
+  color: #eee;
+  // padding: 1rem;
 `;
 
 const Table = styled.table`
@@ -65,10 +68,16 @@ interface ApiResponse {
 
 const limit = 20;
 
-export default function HistoryPanel() {
+interface SignleTableProps{
+  api:string;
+}
+
+export default function SingleTable({api}:SignleTableProps) {
   const [rows, setRows] = useState<RowData[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   const totalPages = Math.ceil(total / limit);
   const maxPagesShown = 10;
@@ -77,13 +86,15 @@ export default function HistoryPanel() {
 
   const fetchData = async (currentPage = page) => {
     try {
-      const res = await axios.get<ApiResponse>(`${BASE_URL}/histories`, {
+      const res = await axios.get<ApiResponse>(`${BASE_URL}/${api}`, {
         params: { page: currentPage, limit },
       });
       setRows(res.data.rows);
       setTotal(res.data.total);
     } catch (err) {
       console.error("데이터 로드 실패:", err);
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -119,7 +130,10 @@ useEffect(() => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [page, totalPages]);
 
-  if (!rows.length) return <Container>Loading...</Container>;
+  if (isLoading) {
+    return <Container>Loading...</Container>;
+  }
+  if (!isLoading && rows.length===0) return <Container>No Data</Container>;
 
   const headers = Object.keys(rows[0] || {});
 
