@@ -66,7 +66,7 @@ export default function(){
     .then(res => {
       setIp(res.data);
     })
-    .catch(err => console.error('IP 가져오기 실패:', err));
+    .catch(err => console.error('failed to load db-ip-address:', err));
   }, []);
 
   // SQL 패널 관련 단축키

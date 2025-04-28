@@ -17,7 +17,7 @@ export default function DataPanel() {
     //     const json = await res.json();
     //     setData(json);
     //   } catch (err) {
-    //     console.error("데이터 가져오기 실패:", err);
+    //     console.error("failed to load data:", err);
     //   }
     // };
     const fetchData = async () => {
@@ -25,7 +25,7 @@ export default function DataPanel() {
           const res = await axios.get(`${BASE_URL}/data`);
           setData(res.data);
         } catch (err) {
-          console.error("데이터 가져오기 실패:", err);
+          console.error("failed to load data:", err);
         }
     };
 

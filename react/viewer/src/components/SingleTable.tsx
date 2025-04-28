@@ -36,7 +36,7 @@ export default function SingleTable({table, primary}:SignleTableProps) {
       setRows(res.data.rows);
       setTotal(res.data.total);
     } catch (err) {
-      console.error("데이터 로드 실패:", err);
+      console.error("failed to load data:", err);
     } finally{
       setIsLoading(false);
     }
