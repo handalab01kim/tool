@@ -67,16 +67,10 @@ app.get('/systemlog', async (req, res) => {
     }
 });
 
-let temp = false;
 app.get('/histories', async (req, res) => {
-  temp=!temp;
-  if(temp)
-    console.log("요청 옴!!")
-  else
-    console.log("요청 옴 2!!!!");
   const { page = 1, limit = 20 } = req.query;
   const offset = (page - 1) * limit;
-  tableName = "member";
+  tableName = "history";
   if (!tableName) {
       return res.status(400).json({ error: 'Table name is required' });
   }

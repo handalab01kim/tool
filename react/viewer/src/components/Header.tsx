@@ -29,7 +29,7 @@ const Button = styled.button<{ bgColor?: string, active?: boolean }>`
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: #424242;
+    background-color: ${(props)=>(props.active ? '#00a1e0' : props.bgColor || '#424242')};
     transform: scale(1.1);
   }
 `;
@@ -131,7 +131,7 @@ const Header = () => {
     if (urlLocation.pathname === `/${HISTORY_PATH}`) {
       return "Event Histories";
     }
-    console.log("뭐냐면~", urlLocation.pathname);
+    // console.log("location.pathname: ", urlLocation.pathname);
     return "Real-Time NSK DB";
   };
 

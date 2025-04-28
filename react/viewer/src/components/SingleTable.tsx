@@ -75,10 +75,10 @@ export default function HistoryPanel() {
   const startPage = Math.floor((page - 1) / maxPagesShown) * maxPagesShown + 1;
   const endPage = Math.min(startPage + maxPagesShown - 1, totalPages);
 
-  const fetchData = async () => {
+  const fetchData = async (currentPage = page) => {
     try {
       const res = await axios.get<ApiResponse>(`${BASE_URL}/histories`, {
-        params: { page, limit },
+        params: { page: currentPage, limit },
       });
       setRows(res.data.rows);
       setTotal(res.data.total);
@@ -92,17 +92,18 @@ export default function HistoryPanel() {
 //     return () => clearInterval(interval);
 //   }, [page]);
 useEffect(() => {
+  fetchData(page);
     const interval = setInterval(() => {
-      fetchData();  // 페이지 변경에 관계없이 주기적으로 데이터 갱신
+      fetchData(page);  // 페이지 변경에 관계없이 주기적으로 데이터 갱신
     }, 1000);
   
     return () => clearInterval(interval);
-  }, []);  // 빈 배열로 설정하여 컴포넌트 마운트 시 한 번만 실행
+  }, [page]);  // 빈 배열로 설정하여 컴포넌트 마운트 시 한 번만 실행
 
-  useEffect(() => {
-    // 페이지 변경 시마다 데이터 갱신
-    fetchData();
-  }, [page]);  // page가 바뀔 때마다 실행
+  // useEffect(() => {
+  //   // 페이지 변경 시마다 데이터 갱신
+  //   fetchData();
+  // }, [page]);  // page가 바뀔 때마다 실행
   ///
 
 
