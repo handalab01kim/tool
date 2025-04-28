@@ -90,12 +90,28 @@ app.get('/get-table', async (req, res) => {
       const pkColumn = pkResult.rows[0]?.column_name;
 
       // 2. 테이블의 timestamp 컬럼 찾기
-      const timestampQuery = `
-        SELECT column_name
-        FROM information_schema.columns
-        WHERE table_name = $1 AND data_type IN ('timestamp', 'timestamp without time zone')
-      `;
-      const timestampResult = await pool.query(timestampQuery, [table]);
+      let timestampQuery;
+      let query_table;
+      // (private)
+      if(table.startsWith("private.")){
+        timestampQuery = `
+          SELECT column_name
+          FROM information_schema.columns
+          WHERE table_schema = 'private'
+          AND table_name = $1
+          AND data_type IN ('timestamp', 'timestamp without time zone');
+        `;
+        query_table = table.slice(8);
+      } else{
+      // (public)
+        timestampQuery = `
+          SELECT column_name
+          FROM information_schema.columns
+          WHERE table_name = $1 AND data_type IN ('timestamp', 'timestamp without time zone')
+        `;
+        query_table = table;
+      }
+      const timestampResult = await pool.query(timestampQuery, [query_table]);
       const timestampColumns = timestampResult.rows.map(row => row.column_name);
 
       // 3. 데이터 조회 쿼리 작성
@@ -104,28 +120,30 @@ app.get('/get-table', async (req, res) => {
       let timestampFormatted = '';
 
       // 만약 timestamp 컬럼이 있으면, 이를 포맷팅하여 SELECT 절에 추가
+      // console.log("TEST");
       if (timestampColumns.length > 0) {
-          timestampFormatted = timestampColumns.map(col => 
-              `to_char(${col}, 'YYYY-MM-DD HH24:MI:SS.MS') AS ${col}`
-          ).join(', ');
-          selectColumns = `${selectColumns}, ${timestampFormatted}`;
+        timestampFormatted = timestampColumns.map(col => 
+          `to_char(${col} AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS.MS') AS ${col}`
+        ).join(', ');
+        selectColumns = `*, ${timestampFormatted}`;
       }
-
+      
       // 4. 데이터와 카운트 쿼리
       // const countQuery = `SELECT COUNT(*) FROM public."${table}"`;
       const countQuery = `SELECT COUNT(*) FROM ${table}`;
       // FROM public."${table}"
       const dataQuery = `
-        SELECT ${selectColumns}
-        FROM ${table}
-        ${orderBy ? `ORDER BY ${orderBy}` : ''}
-        LIMIT $1 OFFSET $2
+      SELECT ${selectColumns}
+      FROM ${table}
+      ${orderBy ? `ORDER BY ${orderBy}` : ''}
+      LIMIT $1 OFFSET $2
       `;
-
+      
       // 5. 데이터 조회 및 응답 처리
       const countResult = await pool.query(countQuery);
       const dataResult = await pool.query(dataQuery, [limit, offset]);
-
+      
+      // console.log("QUERY_DEBUG"+dataQuery);
       result.total = parseInt(countResult.rows[0].count);
       result.rows = dataResult.rows;
 
