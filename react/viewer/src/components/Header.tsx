@@ -194,6 +194,25 @@ const Header = () => {
     };
   }, [isSqlPanelVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
   
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const paths = ['/', LOG_PATH, HISTORY_PATH];
+      const currentIndex = paths.indexOf(location.pathname);
+  
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        const nextIndex = (currentIndex + 1) % paths.length;
+        navigate(paths[nextIndex]);
+      } else if (e.key === 'Tab' && e.shiftKey) {
+        e.preventDefault();
+        const prevIndex = (currentIndex - 1 + paths.length) % paths.length;
+        navigate(paths[prevIndex]);
+      }
+    };
+  
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [location.pathname, navigate]);
   
 
   return (
