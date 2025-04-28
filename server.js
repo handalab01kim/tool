@@ -161,7 +161,7 @@ app.post('/execute-sql', async (req, res) => {
       res.status(200).json({ result });
     } catch (err) {
       console.error('SQL Error:', err);
-      res.status(500).send('Query failed');
+      res.status(400).send('Query failed: ' + err);
     }
 });
   
