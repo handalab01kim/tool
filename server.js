@@ -6,7 +6,7 @@ const { db, tablesToWatch } = require('./config');
 
 const app = express();
 const pool = new Pool(db);
-const PORT = 5000;
+const PORT = 5001;
 
 app.use(cors());
 app.use(express.static('public/dist')); // index.html
@@ -26,10 +26,11 @@ app.get('/data', async (req, res) => {
   for (let table of tablesToWatch) {
     try {
         let query;
-        // if(table!=="member")
-        //     query = `SELECT * FROM "${table}" ORDER BY id ASC;`;
-        // else
-            // query = `SELECT * FROM "${table}" ORDER BY admin DESC, email ASC;`;
+        if(table.includes("channel"))
+            query = `SELECT * FROM "${table}" ORDER BY id ASC;`;
+        else if (table==="member")
+            query = `SELECT * FROM "${table}" ORDER BY admin DESC, email ASC;`;
+        else
             query = `SELECT * FROM "${table}";`;
       const { rows } = await pool.query(query);
       result[table] = rows;
@@ -68,9 +69,9 @@ app.get('/data', async (req, res) => {
 // });
 
 app.get('/get-table', async (req, res) => {
-  const { page = 1, limit = 20, table } = req.query;
+  const { page = 1, limit = 20, table, primary } = req.query;
   const offset = (page - 1) * limit;
-  if (!table) {
+  if (!table) { // primary key는 없을 수도 있음
       return res.status(400).json({ error: 'Table name is required' });
   }
 
@@ -80,16 +81,8 @@ app.get('/get-table', async (req, res) => {
   };
 
   try {
-      // 1. 테이블의 primary key 컬럼 찾기
-      const pkQuery = `
-        SELECT column_name
-        FROM information_schema.key_column_usage
-        WHERE table_name = $1 AND constraint_name = 'PRIMARY'
-      `;
-      const pkResult = await pool.query(pkQuery, [table]);
-      const pkColumn = pkResult.rows[0]?.column_name;
-
-      // 2. 테이블의 timestamp 컬럼 찾기
+      // primary 찾기 X, 직접 입력
+      // 1. 테이블의 timestamp 컬럼 찾기
       let timestampQuery;
       let query_table;
       // (private)
@@ -114,9 +107,9 @@ app.get('/get-table', async (req, res) => {
       const timestampResult = await pool.query(timestampQuery, [query_table]);
       const timestampColumns = timestampResult.rows.map(row => row.column_name);
 
-      // 3. 데이터 조회 쿼리 작성
+      // 2. 데이터 조회 쿼리 작성
       let selectColumns = '*';  // 기본적으로 모든 컬럼 선택
-      let orderBy = pkColumn ? `${pkColumn} DESC` : '';  // Primary key가 없으면 ORDER BY 생략
+      let orderBy = primary ? `${primary} DESC` : '';  // Primary key가 없으면 ORDER BY 생략
       let timestampFormatted = '';
 
       // 만약 timestamp 컬럼이 있으면, 이를 포맷팅하여 SELECT 절에 추가
@@ -128,7 +121,7 @@ app.get('/get-table', async (req, res) => {
         selectColumns = `*, ${timestampFormatted}`;
       }
       
-      // 4. 데이터와 카운트 쿼리
+      // 3. 데이터와 카운트 쿼리
       // const countQuery = `SELECT COUNT(*) FROM public."${table}"`;
       const countQuery = `SELECT COUNT(*) FROM ${table}`;
       // FROM public."${table}"
@@ -139,7 +132,7 @@ app.get('/get-table', async (req, res) => {
       LIMIT $1 OFFSET $2
       `;
       
-      // 5. 데이터 조회 및 응답 처리
+      // 4. 데이터 조회 및 응답 처리
       const countResult = await pool.query(countQuery);
       const dataResult = await pool.query(dataQuery, [limit, offset]);
       
@@ -173,9 +166,18 @@ app.post('/execute-sql', async (req, res) => {
 });
   
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "dist", "index.html"));
+// 남은 모든 요청(= static 파일로 매칭 안 된 요청)은 index.html로
+app.use((req, res, next) => {
+  res.sendFile(path.join(__dirname, 'public', 'dist', 'index.html'));
 });
+// 버전 이슈로 '*' 안될 수 있음
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, "public", "dist", "index.html"));
+// });
+// '/'은 리액트 내의 / 가 아닌 경로에서 새로 고침 시 접속 안됨
+// app.get('/', (req, res) => {
+//   res.sendFile(path.join(__dirname, "public", "dist", "index.html"));
+// });
 
 
 

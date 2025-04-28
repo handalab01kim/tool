@@ -70,9 +70,10 @@ const limit = 20;
 
 interface SignleTableProps{
   table:string;
+  primary:string;
 }
 
-export default function SingleTable({table}:SignleTableProps) {
+export default function SingleTable({table, primary}:SignleTableProps) {
   const [rows, setRows] = useState<RowData[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -87,7 +88,7 @@ export default function SingleTable({table}:SignleTableProps) {
   const fetchData = async (currentPage = page) => {
     try {
       const res = await axios.get<ApiResponse>(`${BASE_URL}/get-table`, {
-        params: { page: currentPage, limit, table },
+        params: { page: currentPage, limit, table, primary },
       });
       setRows(res.data.rows);
       setTotal(res.data.total);
