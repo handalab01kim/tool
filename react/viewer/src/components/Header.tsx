@@ -17,7 +17,7 @@ export default function(){
 
   const getTitle = () => {
     if (urlLocation.pathname === "/") {
-      return `Real-Time NSK DB ${ip && `(${ip})`}`;
+      return `Real-Time DB ${ip && `(${ip})`}`;
     }
     if (urlLocation.pathname === LOG_PATH) {
       return "System Log";
@@ -26,7 +26,7 @@ export default function(){
       return "Event Histories";
     }
     // console.log("location.pathname: ", urlLocation.pathname);
-    return "Real-Time NSK DB";
+    return "Real-Time DB";
   };
 
   const toggleSqlPanel = () => {
@@ -40,18 +40,18 @@ export default function(){
     try {
       const res = await axios.post(`${BASE_URL}/execute-sql`, { query });
       if (res.status === 200) {
-        setToastMessage("SQL 실행 성공!");
+        setToastMessage("SQL execution succeeded!");
         setIsOk(true); // sql 성공
         const data = res.data; 
         console.log(data.result.rows);
       } else {
         setIsOk(false); // sql 실패
-        setToastMessage("실행 실패!");
+        setToastMessage("sql execution failed!");
       }
     } catch (error) {
       setIsOk(false); // sql 실패
-      setToastMessage("실행 실패!");
-      console.error("SQL 실행 중 오류 발생:", error);
+      setToastMessage("sql execution failed!");
+      console.error("SQL failed:", error);
     } finally {
       // 토스트 3초 뒤 제거
       setTimeout(() => {
