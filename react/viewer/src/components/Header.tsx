@@ -155,9 +155,16 @@ export default function(){
 
 const HeaderWrapper = styled.div`
   display: flex;
+  flex-wrap: wrap; /* 버튼들이 한 줄에 다 못 들어오면 줄바꿈 */
   align-items: center;
-  gap: 3rem;
+  gap: 1rem;
   margin-bottom: 2rem;
+  justify-content: center;
+
+  @media (max-width: 768px) {
+    flex-direction: column; /* 모바일에서는 세로 정렬 */
+    gap: 0.5rem;
+  }
 `;
 
 const Title = styled.h1`
@@ -180,6 +187,11 @@ const Button = styled.button<{ bgColor?: string, active?: boolean }>`
     background-color: ${(props)=>(props.active ? '#00a1e0' : props.bgColor || '#424242')};
     transform: scale(1.1);
   }
+
+  @media (max-width: 768px) {
+    width: 80%; /* 모바일에서는 버튼 넓게 */
+    font-size: 0.9rem;
+  }
 `;
 
 const SqlPanel = styled.div<{ isVisible: boolean }>`
@@ -197,6 +209,10 @@ const SqlPanel = styled.div<{ isVisible: boolean }>`
   max-width: 600px;
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
   box-sizing: border-box;
+
+  @media (max-width: 480px) {
+    width: 95%;
+  }
 `;
 
 const SqlHeader = styled.div`
@@ -217,6 +233,9 @@ const SqlTextArea = styled.textarea`
   padding: 0.5rem;
   font-family: monospace;
   resize: vertical;
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const SqlButton = styled.button`

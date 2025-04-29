@@ -6,7 +6,7 @@ const { db, tablesToWatch } = require('./config');
 
 const app = express();
 const pool = new Pool(db);
-const PORT = 5001;
+const PORT = 5000;
 
 app.use(cors());
 app.use(express.static('public/dist')); // index.html
