@@ -8,18 +8,34 @@ import {BASE_URL} from "../api/config";
 import ConfigPanel from './ConfigPanel';
 import { useConfigStore } from '../store/configStore'; 
 
+import ToastContainer, { ToastMessage } from './ToastContainer';
+
 export default function(){
   const urlLocation = useLocation();  // 현재 경로 추적
   const navigate = useNavigate();  // navigate 사용
 
   const [ip, setIp] = useState<string>("localhost");
   const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
-  const [toastMessage, setToastMessage] = useState<string>("");
-  const [isOk, setIsOk] = useState<boolean>(false);
 
   const [isConfigVisible, setIsConfigVisible] = useState(false); // config 창
 
   const { tableRoutes } = useConfigStore(); // for menu buttons
+
+
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (message: string, isOk: boolean) => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, isOk }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  };
+
+  const removeToast = (id: number) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
 
   const getTitle = () => {
     if (urlLocation.pathname === "/") {
@@ -50,23 +66,15 @@ export default function(){
     try {
       const res = await axios.post(`${BASE_URL}/execute-sql`, { query });
       if (res.status === 200) {
-        setToastMessage("SQL execution succeeded!");
-        setIsOk(true); // sql 성공
+        addToast("SQL execution succeeded!", true); // sql 성공
         const data = res.data; 
         console.log(data.result.rows); // 결과 출력
       } else {
-        setIsOk(false); // sql 실패
-        setToastMessage("sql execution failed!");
+        addToast("SQL execution failed!", false); // sql 실패
       }
     } catch (error) {
-      setIsOk(false); // sql 실패
-      setToastMessage("sql execution failed!");
+      addToast("SQL execution failed!", false); // sql 실패
       console.error("SQL failed:", error); // 실패 사유 출력
-    } finally {
-      // 토스트 3초 뒤 제거
-      setTimeout(() => {
-        setToastMessage("");
-      }, 3000);
     }
   };
 
@@ -172,6 +180,8 @@ export default function(){
 
       <Button bgColor="rgb(199, 202, 0)" onClick={() => setIsConfigVisible(true)}>DB Config</Button>
 
+      {/* 토스트 */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {isConfigVisible && (
         <>
@@ -183,8 +193,7 @@ export default function(){
           </DbConfigHeader>
             <ConfigPanel
               onToast={(msg: string, success: boolean) => {
-                setToastMessage(msg);
-                setIsOk(success);
+                addToast(msg, success);
               }}
             />
           </ConfigPanelWrapper>
@@ -203,7 +212,7 @@ export default function(){
         <SqlButton onClick={sendSql}>확인</SqlButton>
       </SqlPanel>
       <Overlay isVisible={isSqlPanelVisible} onClick={()=>setIsSqlPanelVisible(false)}/>
-      <Toast isOk = {isOk} isVisible={toastMessage !== ""}>{toastMessage}</Toast> 
+      {/* <Toast isOk = {isOk} isVisible={toastMessage !== ""}>{toastMessage}</Toast>  */}
     </HeaderWrapper>
   );
 };

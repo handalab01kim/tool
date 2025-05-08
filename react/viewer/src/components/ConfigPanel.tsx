@@ -85,9 +85,6 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
       console.error(err);
     //   setMessage('설정 적용 실패');
       onToast?.('DB connection failed!', false);
-    } finally{
-    //   setTimeout(()=>{setMessage('')}, 3000);
-      setTimeout(()=>{ onToast?.('', true);}, 3000);
     }
   };
 
