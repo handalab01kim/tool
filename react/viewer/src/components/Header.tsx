@@ -76,11 +76,11 @@ export default function(){
   // SQL / DB 패널 열기 단축키
   useEffect(()=>{
     const handleKey = (e: KeyboardEvent) =>{
-      if (!isSqlPanelVisible&&(e.key === 'e' || e.key === 'E')) {
+      if (!isConfigVisible&&!isSqlPanelVisible&&(e.key === 'e' || e.key === 'E')) {
         e.preventDefault(); // 브라우저 기본 동작 막음
         setIsSqlPanelVisible(true);
         return;
-      } else if(!isConfigVisible&&(e.key === 'd' || e.key === 'D')){
+      } else if(!isConfigVisible&&!isSqlPanelVisible&&(e.key === 'd' || e.key === 'D')){
         e.preventDefault(); // 브라우저 기본 동작 막음
         setIsConfigVisible(true);
         return;

@@ -25,13 +25,37 @@ app.get('/data', async (req, res) => {
 
   for (let table of currentTablesToWatch) {
     try {
-        let query;
-        if(table.includes("channel"))
-            query = `SELECT * FROM "${table}" ORDER BY id ASC;`;
-        else if (table==="member")
-            query = `SELECT * FROM "${table}" ORDER BY admin DESC, email ASC;`;
-        else
-            query = `SELECT * FROM "${table}";`;
+        let query = `SELECT * FROM "${table}" ;`;
+        if(table.includes("/")){ // 정렬 시 기준 column 이름 '/' 로 구분하여 전달
+          const t = table.split("/");
+          for(let i=0; i<t.length; i++){ // 다중 조건 정렬 가능
+            if(i==0){
+              query = `SELECT * FROM "${t[i]}" `;
+            }else{ 
+              let sort = "ASC";
+              let column = t[i];
+
+              // column 이름 앞에 * 붙이면 DESC, 기본 ASC
+              if(t[i].startsWith("*")){
+                sort = "DESC";
+                column = t[i].slice(1);
+              }
+
+              if(i==1)
+                query+=`ORDER BY ${column} ${sort} `;
+              else
+                query+=`, ${column} ${sorrt} `;
+            }
+          }
+          query+=";";
+        }
+
+        // if(table.includes("channel"))
+        //   query = `SELECT * FROM "${table}" ORDER BY id ASC;`;
+        // else if (table==="member")
+        //   query = `SELECT * FROM "${table}" ORDER BY admin DESC, email ASC;`;
+        // else
+        //   query = `SELECT * FROM "${table}";`;
       const { rows } = await pool.query(query);
       result[table] = rows;
     } catch (err) {

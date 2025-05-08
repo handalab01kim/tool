@@ -77,7 +77,7 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
       <Label>Password</Label><Input name="password" type="password" value={form.password}  onChange={handleChange}/>
       <Label>Database</Label><Input name="database" value={form.database} onChange={handleChange}/>
 
-      <Label>Tables to Watch (comma-separated)</Label>
+      <Label>Tables to Watch (tableA, tableB/c1/*c2 == tableA, tableB(c1 ASC, c2 DESC))</Label>
       <Input value={tableList} onChange={(e) => setTableList(e.target.value)} />
 
       <Button onClick={handleSubmit}>Connect</Button>
