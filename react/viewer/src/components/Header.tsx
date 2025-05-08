@@ -6,6 +6,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {BASE_URL} from "../api/config";
 import {LOG_PATH,HISTORY_PATH} from "../api/path";
 
+import ConfigPanel from './ConfigPanel';
+
 export default function(){
   const urlLocation = useLocation();  // 현재 경로 추적
   const navigate = useNavigate();  // navigate 사용
@@ -14,6 +16,8 @@ export default function(){
   const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const [isOk, setIsOk] = useState<boolean>(false);
+
+  const [isConfigVisible, setIsConfigVisible] = useState(false); // config 창
 
   const getTitle = () => {
     if (urlLocation.pathname === "/") {
@@ -135,6 +139,21 @@ export default function(){
         View Event Histories
       </Button>
       <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={toggleSqlPanel}>Execute SQL</Button>
+
+      <Button bgColor="#ffaa00" onClick={() => setIsConfigVisible(true)}>DB Config</Button>
+
+
+      {isConfigVisible && (
+        <>
+          <Overlay isVisible={true} onClick={() => setIsConfigVisible(false)} />
+          <ConfigPanelWrapper>
+            <ConfigPanel />
+          </ConfigPanelWrapper>
+        </>
+      )}
+
+
+
       <SqlPanel isVisible={isSqlPanelVisible}>
         <SqlHeader>
           <strong>SQL Query Executer</strong>
@@ -255,4 +274,25 @@ const Overlay = styled.div<{ isVisible: boolean }>`
   background: rgba(0, 0, 0, 0.7);
   z-index: 998;
   display: ${(props) => (props.isVisible ? 'block' : 'none')};
+`;
+
+
+
+
+
+const ConfigPanelWrapper = styled.div`
+  display: block;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  background: #1c1c1c;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 0 20px rgba(255, 200, 0, 0.3);
+  box-sizing: border-box;
 `;

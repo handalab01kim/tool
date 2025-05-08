@@ -5,7 +5,7 @@ const path = require('path');
 const { db, tablesToWatch } = require('./config');
 
 const app = express();
-const pool = new Pool(db);
+let pool = new Pool(db);
 const PORT = 5000;
 
 app.use(cors());
@@ -164,6 +164,46 @@ app.post('/execute-sql', async (req, res) => {
       res.status(400).send('Query failed: ' + err);
     }
 });
+
+
+let currentTablesToWatch = [...tablesToWatch];
+
+app.post('/update-config', async (req, res) => {
+  // console.log("config update API 호출");
+  const { dbConfig, tablesToWatch } = req.body;
+  // console.log(dbConfig);
+  try {
+    // 기존 pool 종료
+    await pool.end();
+    // 새로운 연결
+    pool = new Pool(dbConfig);
+    await pool.query('SELECT 1'); // 연결 테스트
+
+    // 업데이트 반영
+    currentTablesToWatch = tablesToWatch;
+    res.json({ message: 'Config updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update config', error: err.message });
+  }
+});
+
+// 필요시 현재 설정 확인
+app.get('/config', (req, res) => {
+  // res.json({ dbConfig: pool.options, tablesToWatch: currentTablesToWatch });
+  res.json({
+    dbConfig: {
+      host: pool.options.host,
+      port: pool.options.port,
+      user: pool.options.user,
+      database: pool.options.database,
+      password: db.password,
+    },
+    tablesToWatch: currentTablesToWatch,
+  });
+});
+
+
   
 
 // 남은 모든 요청(= static 파일로 매칭 안 된 요청)은 index.html로
