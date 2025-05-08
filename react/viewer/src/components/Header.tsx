@@ -4,9 +4,9 @@ import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import {BASE_URL} from "../api/config";
-import {LOG_PATH,HISTORY_PATH} from "../api/path";
 
 import ConfigPanel from './ConfigPanel';
+import { useConfigStore } from '../store/configStore'; 
 
 export default function(){
   const urlLocation = useLocation();  // 현재 경로 추적
@@ -19,16 +19,22 @@ export default function(){
 
   const [isConfigVisible, setIsConfigVisible] = useState(false); // config 창
 
+  const { tableRoutes } = useConfigStore(); // for menu buttons
+
   const getTitle = () => {
     if (urlLocation.pathname === "/") {
       return `Real-Time DB ${ip && `(${ip})`}`;
     }
-    if (urlLocation.pathname === LOG_PATH) {
-      return "System Log";
-    }
-    if (urlLocation.pathname === HISTORY_PATH) {
-      return "Event Histories";
-    }
+    // if (urlLocation.pathname === LOG_PATH) {
+    //   return "System Log";
+    // }
+    // if (urlLocation.pathname === HISTORY_PATH) {
+    //   return "Event Histories";
+    // }
+
+    const match = tableRoutes.find(r => r.path === urlLocation.pathname);
+    if (match) return match.button;
+
     // console.log("location.pathname: ", urlLocation.pathname);
     return "Real-Time DB";
   };
@@ -120,7 +126,10 @@ export default function(){
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isConfigVisible||isSqlPanelVisible) return; // !! ConfigPanel 열려 있으면 페이지 전환 금지
 
-      const paths = ['/', LOG_PATH, HISTORY_PATH];
+      const staticPaths = ['/'];
+      const dynamicPaths = tableRoutes.map(r => r.path);
+      const paths = [...staticPaths, ...dynamicPaths];
+
       const currentIndex = paths.indexOf(location.pathname);
   
       if (e.key === 'Tab' && !e.shiftKey) {
@@ -149,18 +158,15 @@ export default function(){
       >
         View Database
       </Button>
-      <Button
-        active={location.pathname === LOG_PATH}  // 현재 위치한 경로에 해당하는는 버튼 색상 변경
-        onClick={() => navigate(LOG_PATH)}
-      >
-        View System Log
-      </Button>
-      <Button
-        active={location.pathname === HISTORY_PATH}  
-        onClick={() => navigate(HISTORY_PATH)}
-      >
-        View Event Histories
-      </Button>
+      {tableRoutes.map(({ path, button }) => (
+        <Button
+          key={path}
+          active={location.pathname === path}
+          onClick={() => navigate(path)}
+        >
+          {button}
+        </Button>
+      ))}
       {/* <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={toggleSqlPanel}>Execute SQL</Button> */}
       <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={()=>setIsSqlPanelVisible(true)}>Execute SQL</Button>
 

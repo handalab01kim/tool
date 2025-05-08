@@ -4,6 +4,7 @@ interface TableRoute {
   path: string;
   table: string;
   primary: string;
+  button: string;
 }
 
 interface ConfigState {
@@ -31,7 +32,23 @@ export const useConfigStore = create<ConfigState>((set) => ({
     database: 'projects',
   },
   tablesToWatch: [],
-  tableRoutes: [],
+  // tableRoutes: [],
+  // 기본 값 설정
+  tableRoutes: [
+    {
+      path: '/logs',
+      table: 'private.system_log',
+      primary: 'idx',
+      button: 'View Logs',
+    },
+    {
+      path: '/events',
+      table: 'history',
+      primary: 'idx',
+      button: 'View Events',
+    },
+  ],
+
   setDbConfig: (config) => set({ dbConfig: config }),
   setTablesToWatch: (tables) => set({ tablesToWatch: tables }),
   setTableRoutes: (routes) => set({ tableRoutes: routes }),

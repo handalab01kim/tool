@@ -9,7 +9,7 @@ interface ConfigPanelProps {
 }
 
 export default function ConfigPanel({ onToast }: ConfigPanelProps) {
-    const { dbConfig, tablesToWatch, setDbConfig, setTablesToWatch } = useConfigStore();
+    const { dbConfig, tablesToWatch, tableRoutes, setDbConfig, setTablesToWatch, setTableRoutes } = useConfigStore();
 //   const [form, setForm] = useState(dbConfig); // 장상 작동 안함
   const [form, setForm] = useState({
     host: '',
@@ -19,7 +19,14 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
     database: '',
   });
   const [tableList, setTableList] = useState(tablesToWatch.join(', '));
+  const [tableRoutesRaw, setTableRoutesRaw] = useState(
+    tableRoutes.map(r => `${r.path}/${r.table}/${r.primary}/${r.button}`).join(', ')
+  );
 //   const [message, setMessage] = useState('');
+
+  const handleRoutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTableRoutesRaw(e.target.value);
+  };
 
   useEffect(() => {
     axios.get(`${BASE_URL}/config`)
@@ -56,6 +63,21 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
       await axios.post(`${BASE_URL}/update-config`, sendData);
       setDbConfig(form);
       setTablesToWatch(tables);
+
+
+      const parsedRoutes = tableRoutesRaw
+      .split(',')
+      .map(s => s.trim())
+      .map(entry => {
+        const [path, table, primary, button] = entry.split('/');
+        return { path, table, primary, button };
+      })
+      .filter(r => r.path && r.table && r.primary && r.button);
+    
+      setTableRoutes(parsedRoutes);
+
+
+
     //   onToast('설정이 성공적으로 반영되었습니다.', true);
     //   -> Cannot invoke an object which is possibly 'undefined'
       onToast?.('DB connection succeeded!', true);
@@ -79,6 +101,13 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
 
       <Label>Tables to Watch (tableA, tableB/c1/*c2 == tableA, tableB(c1 ASC, c2 DESC))</Label>
       <Input value={tableList} onChange={(e) => setTableList(e.target.value)} />
+
+      <Label>Tables to Watch in new page (path/table/primary/button)</Label>
+      <Input
+        placeholder="logs/system_log/idx/View Logs, event/history/idx/View Events"
+        value={tableRoutesRaw}
+        onChange={handleRoutesChange}
+      />
 
       <Button onClick={handleSubmit}>Connect</Button>
       {/* {message && <p>{message}</p>} */}
