@@ -195,6 +195,7 @@ export default function(){
               onToast={(msg: string, success: boolean) => {
                 addToast(msg, success);
               }}
+              onIpUpdate={(newIp: string) => setIp(newIp)}
             />
           </ConfigPanelWrapper>
         </>

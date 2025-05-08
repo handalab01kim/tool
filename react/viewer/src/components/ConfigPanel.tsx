@@ -6,9 +6,10 @@ import { BASE_URL } from '../api/config';
 
 interface ConfigPanelProps {
     onToast?: (message: string, isOk: boolean) => void;
+    onIpUpdate?: (ip: string) => void;
 }
 
-export default function ConfigPanel({ onToast }: ConfigPanelProps) {
+export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
     const { dbConfig, tablesToWatch, tableRoutes, setDbConfig, setTablesToWatch, setTableRoutes } = useConfigStore();
 //   const [form, setForm] = useState(dbConfig); // 장상 작동 안함
   const [form, setForm] = useState({
@@ -58,8 +59,11 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
           port: Number(form.port),
         },
         tablesToWatch: tables
-      };
-      console.log(sendData);
+      };      
+      // console.log(sendData);
+      onIpUpdate?.(sendData.dbConfig.host);
+
+
       await axios.post(`${BASE_URL}/update-config`, sendData);
       setDbConfig(form);
       setTablesToWatch(tables);
