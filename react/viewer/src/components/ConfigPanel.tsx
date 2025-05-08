@@ -4,8 +4,12 @@ import { useConfigStore } from '../store/configStore';
 import axios from 'axios';
 import { BASE_URL } from '../api/config';
 
-export default function ConfigPanel() {
-  const { dbConfig, tablesToWatch, setDbConfig, setTablesToWatch } = useConfigStore();
+interface ConfigPanelProps {
+    onToast?: (message: string, isOk: boolean) => void;
+}
+
+export default function ConfigPanel({ onToast }: ConfigPanelProps) {
+    const { dbConfig, tablesToWatch, setDbConfig, setTablesToWatch } = useConfigStore();
 //   const [form, setForm] = useState(dbConfig); // 장상 작동 안함
   const [form, setForm] = useState({
     host: '',
@@ -15,7 +19,7 @@ export default function ConfigPanel() {
     database: '',
   });
   const [tableList, setTableList] = useState(tablesToWatch.join(', '));
-  const [message, setMessage] = useState('');
+//   const [message, setMessage] = useState('');
 
   useEffect(() => {
     axios.get(`${BASE_URL}/config`)
@@ -52,12 +56,16 @@ export default function ConfigPanel() {
       await axios.post(`${BASE_URL}/update-config`, sendData);
       setDbConfig(form);
       setTablesToWatch(tables);
-      setMessage('설정이 성공적으로 반영되었습니다.');
+    //   onToast('설정이 성공적으로 반영되었습니다.', true);
+    //   -> Cannot invoke an object which is possibly 'undefined'
+      onToast?.('DB connection succeeded!', true);
     } catch (err) {
       console.error(err);
-      setMessage('설정 적용 실패.');
+    //   setMessage('설정 적용 실패');
+      onToast?.('DB connection failed!', false);
     } finally{
-      setTimeout(()=>{setMessage('')}, 3000);
+    //   setTimeout(()=>{setMessage('')}, 3000);
+      setTimeout(()=>{ onToast?.('', true);}, 3000);
     }
   };
 
@@ -74,7 +82,7 @@ export default function ConfigPanel() {
       <Input value={tableList} onChange={(e) => setTableList(e.target.value)} />
 
       <Button onClick={handleSubmit}>설정 저장</Button>
-      {message && <p>{message}</p>}
+      {/* {message && <p>{message}</p>} */}
     </Panel>
   );
 }

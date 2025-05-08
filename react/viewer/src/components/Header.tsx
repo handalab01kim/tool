@@ -47,7 +47,7 @@ export default function(){
         setToastMessage("SQL execution succeeded!");
         setIsOk(true); // sql 성공
         const data = res.data; 
-        console.log(data.result.rows);
+        console.log(data.result.rows); // 결과 출력
       } else {
         setIsOk(false); // sql 실패
         setToastMessage("sql execution failed!");
@@ -55,7 +55,7 @@ export default function(){
     } catch (error) {
       setIsOk(false); // sql 실패
       setToastMessage("sql execution failed!");
-      console.error("SQL failed:", error);
+      console.error("SQL failed:", error); // 실패 사유 출력
     } finally {
       // 토스트 3초 뒤 제거
       setTimeout(() => {
@@ -147,7 +147,12 @@ export default function(){
         <>
           <Overlay isVisible={true} onClick={() => setIsConfigVisible(false)} />
           <ConfigPanelWrapper>
-            <ConfigPanel />
+            <ConfigPanel
+              onToast={(msg: string, success: boolean) => {
+                setToastMessage(msg);
+                setIsOk(success);
+              }}
+            />
           </ConfigPanelWrapper>
         </>
       )}
