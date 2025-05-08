@@ -19,11 +19,11 @@ app.get("/ip", (req,res)=>{
   res.send(db.host);
 });
 
-
+let currentTablesToWatch = [...tablesToWatch];
 app.get('/data', async (req, res) => {
   const result = {};
 
-  for (let table of tablesToWatch) {
+  for (let table of currentTablesToWatch) {
     try {
         let query;
         if(table.includes("channel"))
@@ -166,7 +166,7 @@ app.post('/execute-sql', async (req, res) => {
 });
 
 
-let currentTablesToWatch = [...tablesToWatch];
+
 
 app.post('/update-config', async (req, res) => {
   // console.log("config update API 호출");

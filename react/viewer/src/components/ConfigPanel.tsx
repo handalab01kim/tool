@@ -71,7 +71,6 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
 
   return (
     <Panel>
-      <h2>DB 연결 설정</h2>
       <Label>Host</Label><Input name="host" value={form.host} onChange={handleChange}/>
       <Label>Port</Label><Input name="port" type="number" value={form.port}  onChange={handleChange}/>
       <Label>User</Label><Input name="user" value={form.user} onChange={handleChange}/>
@@ -81,20 +80,20 @@ export default function ConfigPanel({ onToast }: ConfigPanelProps) {
       <Label>Tables to Watch (comma-separated)</Label>
       <Input value={tableList} onChange={(e) => setTableList(e.target.value)} />
 
-      <Button onClick={handleSubmit}>설정 저장</Button>
+      <Button onClick={handleSubmit}>Connect</Button>
       {/* {message && <p>{message}</p>} */}
     </Panel>
   );
 }
 
 const Panel = styled.div`
-  padding: 1rem;
-  background: #222;
-  color: white;
-  border: 1px solid #444;
+  padding: 0.3rem;
+//   background: #222;
+//   color: white;
+//   border: 1px solid #444;
   border-radius: 8px;
   max-width: 600px;
-  margin: 2rem auto;
+  margin: 0.2rem auto;
 `;
 
 const Label = styled.label`
@@ -103,7 +102,7 @@ const Label = styled.label`
 `;
 
 const Input = styled.input`
-  width: 100%;
+  width: 98%;
   padding: 0.5rem;
   background: #333;
   color: white;
@@ -112,8 +111,8 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
-  margin-top: 1rem;
-  background: #00a1e0;
+  margin-top: 1.5rem;
+  background:rgb(199, 202, 0);
   border: none;
   padding: 0.5rem 1rem;
   color: white;

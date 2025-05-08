@@ -33,9 +33,9 @@ export default function(){
     return "Real-Time DB";
   };
 
-  const toggleSqlPanel = () => {
-    setIsSqlPanelVisible((prevState) => !prevState);
-  };
+  // const toggleSqlPanel = () => {
+  //   setIsSqlPanelVisible((prevState) => !prevState);
+  // };
 
   const sendSql = async () => {
     const query = (document.getElementById("sql-input") as HTMLTextAreaElement).value;
@@ -73,11 +73,32 @@ export default function(){
     .catch(err => console.error('failed to load db-ip-address:', err));
   }, []);
 
+  // SQL / DB 패널 열기 단축키
+  useEffect(()=>{
+    const handleKey = (e: KeyboardEvent) =>{
+      if (!isSqlPanelVisible&&(e.key === 'e' || e.key === 'E')) {
+        e.preventDefault(); // 브라우저 기본 동작 막음
+        setIsSqlPanelVisible(true);
+        return;
+      } else if(!isConfigVisible&&(e.key === 'd' || e.key === 'D')){
+        e.preventDefault(); // 브라우저 기본 동작 막음
+        setIsConfigVisible(true);
+        return;
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  });
+
   // SQL 패널 관련 단축키
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isSqlPanelVisible) {
-        toggleSqlPanel();  // ESC 키로 SQL 패널 닫음
+        setIsSqlPanelVisible(false);  // ESC 키로 SQL 패널 닫음
+        return;
+      }
+      if (e.key === "Escape" && isConfigVisible) {
+        setIsConfigVisible(false);  // ESC 키로 DB Config 패널 닫음
         return;
       }
       const inputElement = document.getElementById("sql-input") as HTMLTextAreaElement;
@@ -92,11 +113,13 @@ export default function(){
     return () => {
       document.removeEventListener("keydown", handleEscKey);  // cleanup
     };
-  }, [isSqlPanelVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
+  }, [isSqlPanelVisible, isConfigVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
   
   // Tab / Shift+Tab으로 탭 전환
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isConfigVisible||isSqlPanelVisible) return; // !! ConfigPanel 열려 있으면 페이지 전환 금지
+
       const paths = ['/', LOG_PATH, HISTORY_PATH];
       const currentIndex = paths.indexOf(location.pathname);
   
@@ -113,7 +136,7 @@ export default function(){
   
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, isConfigVisible]);
   
 
   return (
@@ -138,15 +161,20 @@ export default function(){
       >
         View Event Histories
       </Button>
-      <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={toggleSqlPanel}>Execute SQL</Button>
+      {/* <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={toggleSqlPanel}>Execute SQL</Button> */}
+      <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={()=>setIsSqlPanelVisible(true)}>Execute SQL</Button>
 
-      <Button bgColor="#ffaa00" onClick={() => setIsConfigVisible(true)}>DB Config</Button>
+      <Button bgColor="rgb(199, 202, 0)" onClick={() => setIsConfigVisible(true)}>DB Config</Button>
 
 
       {isConfigVisible && (
         <>
           <Overlay isVisible={true} onClick={() => setIsConfigVisible(false)} />
           <ConfigPanelWrapper>
+          <DbConfigHeader>
+            <h2>DB Config</h2>
+            <SqlButton onClick={()=>setIsConfigVisible(false)}>X</SqlButton>
+          </DbConfigHeader>
             <ConfigPanel
               onToast={(msg: string, success: boolean) => {
                 setToastMessage(msg);
@@ -162,13 +190,13 @@ export default function(){
       <SqlPanel isVisible={isSqlPanelVisible}>
         <SqlHeader>
           <strong>SQL Query Executer</strong>
-          <SqlButton onClick={toggleSqlPanel}>X</SqlButton>
+          <SqlButton onClick={()=>setIsSqlPanelVisible(false)}>X</SqlButton>
         </SqlHeader>
         {/* <SqlTextArea placeholder='ex: SELECT now();'>update member set nickname='test' where email='user1@nsk.com' returning *;</SqlTextArea> */}
         <SqlTextArea id="sql-input" placeholder='ex: SELECT now();'/>
         <SqlButton onClick={sendSql}>확인</SqlButton>
       </SqlPanel>
-      <Overlay isVisible={isSqlPanelVisible} onClick={toggleSqlPanel}/>
+      <Overlay isVisible={isSqlPanelVisible} onClick={()=>setIsSqlPanelVisible(false)}/>
       <Toast isOk = {isOk} isVisible={toastMessage !== ""}>{toastMessage}</Toast> 
     </HeaderWrapper>
   );
@@ -229,6 +257,14 @@ const SqlHeader = styled.div`
   align-items: center;
   margin-bottom: 0.5rem;
   color: #0f0;
+`;
+
+const DbConfigHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0rem;
+  color: rgb(199, 202, 0);
 `;
 
 const SqlTextArea = styled.textarea`
@@ -292,7 +328,7 @@ const ConfigPanelWrapper = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 999;
-  background: #1c1c1c;
+  background: #222;
   border: 1px solid #444;
   border-radius: 8px;
   padding: 1rem;
@@ -300,4 +336,5 @@ const ConfigPanelWrapper = styled.div`
   max-width: 600px;
   box-shadow: 0 0 20px rgba(255, 200, 0, 0.3);
   box-sizing: border-box;
-`;
+  `;
+  // background: #1c1c1c;
