@@ -73,7 +73,8 @@ export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
       .split(',')
       .map(s => s.trim())
       .map(entry => {
-        const [path, table, primary, button] = entry.split('/');
+        let [path, table, primary, button] = entry.split('/');
+        path = "/"+path;
         return { path, table, primary, button };
       })
       .filter(r => r.path && r.table && r.primary && r.button);

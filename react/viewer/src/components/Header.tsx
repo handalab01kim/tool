@@ -138,7 +138,7 @@ export default function(){
       const dynamicPaths = tableRoutes.map(r => r.path);
       const paths = [...staticPaths, ...dynamicPaths];
 
-      const currentIndex = paths.indexOf(location.pathname);
+      const currentIndex = paths.indexOf(urlLocation.pathname);
   
       if (e.key === 'Tab' && !e.shiftKey) {
         e.preventDefault();
@@ -153,7 +153,7 @@ export default function(){
   
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [location.pathname, navigate, isConfigVisible]);
+  }, [urlLocation.pathname, navigate, isConfigVisible, tableRoutes]);
   
 
   return (
@@ -161,7 +161,7 @@ export default function(){
       <Title>{getTitle()}</Title>
       {/* <Button bgColor="#00a1e0" onClick={() => (location.href = '/')}>View Database</Button> */}
       <Button 
-        active={location.pathname === "/"}
+        active={urlLocation.pathname === "/"}
         onClick={() => navigate('/')}
       >
         View Database
@@ -169,7 +169,7 @@ export default function(){
       {tableRoutes.map(({ path, button }) => (
         <Button
           key={path}
-          active={location.pathname === path}
+          active={urlLocation.pathname === path}
           onClick={() => navigate(path)}
         >
           {button}
@@ -305,22 +305,22 @@ const SqlButton = styled.button`
   cursor: pointer;
 `;
 
-const Toast = styled.div<{ isVisible: boolean, isOk: boolean }>`
-  visibility: ${(props) => (props.isVisible ? 'visible' : 'hidden')};
-  opacity: ${(props) => (props.isVisible ? 1 : 0)};
-  min-width: 250px;
-  background-color: ${(props)=>(props.isOk ? "#0a0":"#c00")};
-  color: #fff;
-  text-align: center;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
-  position: fixed;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  transition: opacity 0.3s ease-in-out;
-`;
+// const Toast = styled.div<{ isVisible: boolean, isOk: boolean }>`
+//   visibility: ${(props) => (props.isVisible ? 'visible' : 'hidden')};
+//   opacity: ${(props) => (props.isVisible ? 1 : 0)};
+//   min-width: 250px;
+//   background-color: ${(props)=>(props.isOk ? "#0a0":"#c00")};
+//   color: #fff;
+//   text-align: center;
+//   padding: 0.75rem 1rem;
+//   border-radius: 4px;
+//   position: fixed;
+//   top: 1rem;
+//   left: 50%;
+//   transform: translateX(-50%);
+//   z-index: 1000;
+//   transition: opacity 0.3s ease-in-out;
+// `;
 
 const Overlay = styled.div<{ isVisible: boolean }>`
   position: fixed;
