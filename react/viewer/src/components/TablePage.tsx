@@ -37,16 +37,16 @@ export default function DataPanel() {
 
   const handleCellBlur = async () => {
     if (!data || !editingCell) return;
-    const { table, rowIdx, key } = editingCell;
+    let { table, rowIdx, key } = editingCell;
     const row = (data[table] as any[])[rowIdx];
-    const primaryKey = Object.keys(row)[0]; // 첫 번째 컬럼을 기본키로 가정
+    // const primaryKey = Object.keys(row)[0]; // 첫 번째 컬럼을 기본키로 가정
 
     if (row[key] === editValue) {
       setEditingCell(null);
       return;
     }
-
     try {
+      table = table.split("/")[0];
       await axios.put(`${BASE_URL}/row`, {
         table,
         // primary: primaryKey,
@@ -85,8 +85,9 @@ export default function DataPanel() {
     const primaryKey = Object.keys(rowData[0])[0]; // warn !
     const ids = Array.from(selectedRows[table] || []);
     if (ids.length === 0) return;
-
+    
     try {
+      table = table.split("/")[0];
       await axios.delete(`${BASE_URL}/row`, {
         data: {
           table,
@@ -100,6 +101,38 @@ export default function DataPanel() {
     } finally {
       setSelectMode((prev) => ({ ...prev, [table]: false }));
       setSelectedRows((prev) => ({ ...prev, [table]: new Set() }));
+    }
+  };
+
+
+  const handleAddRow = async (table: string, rows: any[]) => {
+    if (!rows || rows.length === 0) return;
+
+    const firstRow = rows[0];
+    const newRow: Record<string, any> = {};
+
+    for (const key of Object.keys(firstRow)) {
+      // 간단한 규칙: id → null, number → 0, string → '', boolean → false
+      const val = firstRow[key];
+      if (typeof val === 'number') {
+        newRow[key] = 0;
+      } else if (typeof val === 'boolean') {
+        newRow[key] = false;
+      } else if (typeof val === 'string') {
+        newRow[key] = '';
+      } else {
+        newRow[key] = null;
+      }
+    }
+    try {
+      table = table.split("/")[0];
+      await axios.post(`${BASE_URL}/row`, {
+        table,
+        row: newRow,
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Add row failed:", err);
     }
   };
 
@@ -152,11 +185,12 @@ export default function DataPanel() {
                     <CancelBtn onClick={() => toggleSelectMode(table)}>❌</CancelBtn>
                   </>
               ) : (
-                  <DeleteBtn onClick={() => {
-                    toggleSelectMode(table);
-                    // setEditingCell(null);
-                    // setEditValue("");
-                  }}>🗑</DeleteBtn>
+                  <>
+                    {Array.isArray(rows) && (
+                      <AddBtn onClick={() => handleAddRow(table, rows)}>new</AddBtn>
+                    )}
+                    <DeleteBtn onClick={() => toggleSelectMode(table)}>🗑</DeleteBtn>
+                  </>
               )}
             </ActionArea>
           </TableHeader>
@@ -302,5 +336,20 @@ const CancelBtn = styled.button`
 
   &:hover {
     background: #777;
+  }
+`;
+
+
+const AddBtn = styled.button`
+  background: seagreen;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+
+  &:hover {
+    background: mediumseagreen;
   }
 `;

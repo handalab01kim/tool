@@ -266,6 +266,7 @@ app.put('/row', async (req, res) => {
   // const sql = `UPDATE ${table} SET ${setClause} WHERE ${primary} = $${fields.length + 1}`;
   // values.push(row[primary]); // primary 값은 마지막에 추가
   
+  // console.log(sql,values);
   try {
     // const result = await pool.query(sql, values);
     const result = await pool.query(sql, [...values, ...whereValues]);
@@ -284,10 +285,32 @@ app.delete('/row', async (req, res) => {
 
   const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
   const sql = `DELETE FROM ${table} WHERE ${primary} IN (${placeholders})`;
-
+  // console.log(sql,values);
   try {
     const result = await pool.query(sql, values);
     res.json({ deleted: result.rowCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /row
+app.post('/row', async (req, res) => {
+  const { table, row } = req.body;
+  if (!table || !row || typeof row !== 'object') {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  const keys = Object.keys(row);
+  const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+  const values = keys.map((key) => row[key]);
+
+  const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING *`;
+  // console.log(sql,values);
+
+  try {
+    const result = await pool.query(sql, values);
+    res.json({ inserted: result.rows[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
