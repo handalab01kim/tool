@@ -21,6 +21,13 @@ interface ConfigState {
   setDbConfig: (config: ConfigState['dbConfig']) => void;
   setTablesToWatch: (tables: string[]) => void;
   setTableRoutes: (routes: TableRoute[]) => void;
+
+  // 패널 열림 여부
+  isSqlPanelVisible: boolean;
+  isConfigVisible: boolean;
+  setIsSqlPanelVisible: (visible: boolean) => void;
+  setIsConfigVisible: (visible: boolean) => void;
+
 }
 
 export const useConfigStore = create<ConfigState>((set) => ({
@@ -52,4 +59,11 @@ export const useConfigStore = create<ConfigState>((set) => ({
   setDbConfig: (config) => set({ dbConfig: config }),
   setTablesToWatch: (tables) => set({ tablesToWatch: tables }),
   setTableRoutes: (routes) => set({ tableRoutes: routes }),
+
+  // 패널 열림 여부
+  isSqlPanelVisible: false,
+  isConfigVisible: false,
+  setIsSqlPanelVisible: (visible) => set({ isSqlPanelVisible: visible }),
+  setIsConfigVisible: (visible) => set({ isConfigVisible: visible }),
+
 }));

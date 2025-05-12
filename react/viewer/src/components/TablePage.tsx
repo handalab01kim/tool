@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { BASE_URL } from "../api/config";
-
+import { useConfigStore } from '../store/configStore'; 
 type Data = Record<string, Array<Record<string, any>> | { error: string }>;
 
 export default function DataPanel() {
@@ -11,6 +11,9 @@ export default function DataPanel() {
   const [editValue, setEditValue] = useState<string>("");
   const [selectMode, setSelectMode] = useState<Record<string, boolean>>({});
   const [selectedRows, setSelectedRows] = useState<Record<string, Set<any>>>({});
+  
+  const { isSqlPanelVisible, isConfigVisible } = useConfigStore(); // for shortcut
+
 
   const fetchData = async () => {
     try {
@@ -100,6 +103,40 @@ export default function DataPanel() {
     }
   };
 
+
+  // ESC shortcut
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isSqlPanelVisible && !isConfigVisible) {
+        // ESC 키로 편집 모드 취소
+        // if(editingCell!=null){
+        setEditingCell(null);      // 편집 상태 해제
+        setEditValue("");          // 입력값 초기화
+          
+          // }
+          
+        // ESC 키로 삭제 모드 취소
+        // const isAnyDeleteMode = Object.values(selectMode).some((v) => v === true);
+        // console.log(isAnyDeleteMode, "!!!!!!!!!!!!!!!!");
+        // if (isAnyDeleteMode) {
+        setSelectMode({});
+        setSelectedRows({});
+          // return;
+        // }
+        return;
+      }
+    };
+  
+    document.addEventListener("keydown", handleEscKey);
+  
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);  // cleanup
+    };
+  }, [isSqlPanelVisible, isConfigVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
+  
+
+
+
   if (!data) return <Wrapper>Loading...</Wrapper>;
 
   return (
@@ -115,7 +152,11 @@ export default function DataPanel() {
                     <CancelBtn onClick={() => toggleSelectMode(table)}>❌</CancelBtn>
                   </>
               ) : (
-                  <DeleteBtn onClick={() => toggleSelectMode(table)}>🗑</DeleteBtn>
+                  <DeleteBtn onClick={() => {
+                    toggleSelectMode(table);
+                    // setEditingCell(null);
+                    // setEditValue("");
+                  }}>🗑</DeleteBtn>
               )}
             </ActionArea>
           </TableHeader>

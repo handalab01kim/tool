@@ -15,11 +15,10 @@ export default function(){
   const navigate = useNavigate();  // navigate 사용
 
   const [ip, setIp] = useState<string>("localhost");
-  const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
+  // const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
+  // const [isConfigVisible, setIsConfigVisible] = useState<boolean>(false); // config 창
 
-  const [isConfigVisible, setIsConfigVisible] = useState(false); // config 창
-
-  const { tableRoutes } = useConfigStore(); // for menu buttons
+  const { isSqlPanelVisible, setIsSqlPanelVisible, isConfigVisible, setIsConfigVisible, tableRoutes } = useConfigStore(); // for panels & menu buttons
 
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -90,14 +89,16 @@ export default function(){
   // SQL / DB 패널 열기 단축키
   useEffect(()=>{
     const handleKey = (e: KeyboardEvent) =>{
-      if (!isConfigVisible&&!isSqlPanelVisible&&(e.key === 'e' || e.key === 'E')) {
-        e.preventDefault(); // 브라우저 기본 동작 막음
-        setIsSqlPanelVisible(true);
-        return;
-      } else if(!isConfigVisible&&!isSqlPanelVisible&&(e.key === 'd' || e.key === 'D')){
-        e.preventDefault(); // 브라우저 기본 동작 막음
-        setIsConfigVisible(true);
-        return;
+      if(!isConfigVisible&&!isSqlPanelVisible){
+        if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
+          e.preventDefault(); // 브라우저 기본 동작 막음
+          setIsSqlPanelVisible(true);
+          return;
+        } else if(e.ctrlKey && (e.key === 'd' || e.key === 'D')){
+          e.preventDefault(); // 브라우저 기본 동작 막음
+          setIsConfigVisible(true);
+          return;
+        }
       }
     };
     document.addEventListener('keydown', handleKey);
