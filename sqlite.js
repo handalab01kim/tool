@@ -1,48 +1,60 @@
 const sqlite3 = require('sqlite3').verbose();
+const { promisify } = require('util');
 
 // DB 파일 생성
 const db = new sqlite3.Database('dbconfig.db');
 
-// 테이블 생성
-db.serialize(() => {
-  db.run(`
-        CREATE TABLE IF NOT EXISTS dbs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            host TEXT NOT NULL,
-            database TEXT NOT NULL,
-            password TEXT NOT NULL,
-            port INTEGER NOT NULL,
-            tables1 TEXT,
-            tables2 TEXT
+// 콜백 기반 API를 Promise로 감쌈
+const allAsync = promisify(db.all.bind(db));
+const runAsync = promisify(db.run.bind(db));
+const prepareAsync = promisify(db.prepare.bind(db));
+const initConfig = async ()=>{
+    try {
+        // 1. 테이블 생성
+        await runAsync(`
+            CREATE TABLE IF NOT EXISTS dbs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user TEXT NOT NULL,
+                host TEXT NOT NULL,
+                database TEXT NOT NULL,
+                password TEXT NOT NULL,
+                port INTEGER NOT NULL,
+                tables1 TEXT,
+                tables2 TEXT
+            );
+        `);
+
+        // 2. 테이블 내용 조회
+        const rows = await allAsync("SELECT * FROM dbs");
+
+        if (rows.length === 0) {
+        // 3. 삽입 준비 및 실행
+            const stmt = await prepareAsync(`
+                INSERT INTO dbs 
+                    (user, host, database, password, port, tables1, tables2) 
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?)`);
+
+
+        await promisify(stmt.run.bind(stmt))(
+            "handalab",
+            "172.30.1.60",
+            "projects",
+            "handalab",
+            5433,
+            "project,channel_info", 
+            "logs/private.system_log/idx/View Logs, events/history/idx/View Events"
         );
-    `);
-
-  // 비어있으면 생성
-  db.all("SELECT * FROM dbs", (err, rows) => {
-    if (err) {
-        console.error("SQLITE SELECT ERROR!! " + err);
-        return;
+        await promisify(stmt.finalize.bind(stmt))();
     }
-    if(rows.length===0){
-        const stmt = db.prepare(`
-            INSERT INTO dbs 
-                (user, host, database, password, port, tables1, tables2) 
-            VALUES
-                (?, ?, ?, ?, ?, ?, ?)`);
-        stmt.run("handalab","172.30.1.60","projects","handalab",5433,"project,channel_info", "logs/private.system_log/idx/View Logs, events/history/idx/View Events");
-        stmt.finalize();
+    // 4. 최종 결과 확인
+    const final = await allAsync("SELECT * FROM dbs");
+    console.log("SQLITE: dbconfig", final);
+    } catch (err) {
+        console.error("initConfig 실패:", err);
+        throw err;
     }
-  });
-
-  db.all("select * from dbs", (err, rows)=>{
-    if(err){
-        console.log("SQLITE 초기 데이터 확인 실패");
-        return;
-    }
-    console.log("SQLITE: dbconfig",rows);
-  });
-});
+};
 
 
 const getConfig = ()=>{
@@ -114,8 +126,8 @@ const postConfig = (newDbConfig, newTables1, newTables2)=>{
     });
 };
 
-exports.default = db;
-module.exports = {getConfig, postConfig};
+// exports.default = db;
+module.exports = {initConfig, getConfig, postConfig};
 
 // 종료
 // db.close();

@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 // const { db, tablesToWatch, tablesToWatchInNewPage } = require('./config');
-const {getConfig, postConfig} = require("./sqlite");
+const {initConfig, getConfig, postConfig} = require("./sqlite");
 
 const app = express();
 const PORT = 5000;
@@ -14,6 +14,7 @@ let dbPassword;
 let dbHost;
 
 (async () => { // dbconfig data (from sqlite)
+  await initConfig();
   const { db, tablesToWatch, tablesToWatchInNewPage } = await getConfig();
   pool = new Pool(db);
   dbPassword = db.password;
