@@ -8,7 +8,8 @@ import {BASE_URL} from "../api/config";
 import ConfigPanel from './ConfigPanel';
 import { useConfigStore } from '../store/configStore'; 
 
-import ToastContainer, { ToastMessage } from './ToastContainer';
+import ToastContainer from './ToastContainer';
+import { useToastStore } from '../store/toastStore';
 
 export default function(){
   const urlLocation = useLocation();  // 현재 경로 추적
@@ -21,19 +22,19 @@ export default function(){
   const { isSqlPanelVisible, setIsSqlPanelVisible, isConfigVisible, setIsConfigVisible, tableRoutes } = useConfigStore(); // for panels & menu buttons
 
 
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const { toasts, addToast, removeToast } = useToastStore();
 
-  const addToast = (message: string, isOk: boolean) => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, isOk }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
-  };
+  // const addToast = (message: string, isOk: boolean) => {
+  //   const id = Date.now();
+  //   setToasts(prev => [...prev, { id, message, isOk }]);
+  //   setTimeout(() => {
+  //     setToasts(prev => prev.filter(t => t.id !== id));
+  //   }, 3000);
+  // };
 
-  const removeToast = (id: number) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  };
+  // const removeToast = (id: number) => {
+  //   setToasts(prev => prev.filter(toast => toast.id !== id));
+  // };
 
 
   const getTitle = () => {
