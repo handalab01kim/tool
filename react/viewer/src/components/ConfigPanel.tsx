@@ -19,20 +19,19 @@ export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
     password: '',
     database: '',
   });
-  const [tableList, setTableList] = useState(tablesToWatch.join(', '));
-  const [tableRoutesRaw, setTableRoutesRaw] = useState(
-    tableRoutes.map(r => `${r.path}/${r.table}/${r.primary}/${r.button}`).join(', ')
-  );
+  const [tableList, setTableList] = useState('');
+  const [tableRouteList, setTableRouteList] = useState('');
 //   const [message, setMessage] = useState('');
 
-  const handleRoutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTableRoutesRaw(e.target.value);
-  };
+  // const handleRoutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setTableRoutesRaw(e.target.value);
+  // };
 
   useEffect(() => {
     axios.get(`${BASE_URL}/config`)
       .then(res => {
-        const { dbConfig, tablesToWatch } = res.data;
+        const { dbConfig, tablesToWatch, tablesToWatchInNewPage } = res.data;
+        console.log(tablesToWatchInNewPage)
         const safeDbConfig = dbConfig || {};
         const safeTables = Array.isArray(tablesToWatch) ? tablesToWatch : [];
 
@@ -40,6 +39,7 @@ export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
         setTableList(safeTables.join(', '));
         setDbConfig(safeDbConfig);
         setTablesToWatch(safeTables);
+        setTableRouteList(tablesToWatchInNewPage);
       })
       .catch(err => console.error('초기 설정값 불러오기 실패:', err));
   }, []); // isOpen이 true일 때마다 실행됨
@@ -58,7 +58,8 @@ export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
           ...form,
           port: Number(form.port),
         },
-        tablesToWatch: tables
+        tablesToWatch: tables,
+        tablesToWatchInNewPage: tableRouteList,
       };      
       // console.log(sendData);
       onIpUpdate?.(sendData.dbConfig.host);
@@ -68,8 +69,7 @@ export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
       setDbConfig(form);
       setTablesToWatch(tables);
 
-
-      const parsedRoutes = tableRoutesRaw
+      const parsedRoutes = tableRouteList
       .split(',')
       .map(s => s.trim())
       .map(entry => {
@@ -107,8 +107,8 @@ export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
       <Label>Tables to Watch in new page (path/table/primary/button)</Label>
       <Input
         placeholder="logs/system_log/idx/View Logs, event/history/idx/View Events"
-        value={tableRoutesRaw}
-        onChange={handleRoutesChange}
+        value={tableRouteList}
+        onChange={(e)=>setTableRouteList(e.target.value)}
       />
 
       <Button onClick={handleSubmit}>Connect</Button>

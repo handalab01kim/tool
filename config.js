@@ -7,6 +7,7 @@ module.exports = {
     port: 5433,
   },
   tablesToWatch: ['project', 'channel_info', 'channel_status', 'channel_roi'], // 메인 뷰 테이블 리스트
+  tablesToWatchInNewPage: "logs/private.system_log/idx/View Logs, events/history/idx/View Events",
 };
 // module.exports = {
 //   db: {

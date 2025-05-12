@@ -2,7 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
-const { db, tablesToWatch } = require('./config');
+const { db, tablesToWatch, tablesToWatchInNewPage } = require('./config');
 
 const app = express();
 let pool = new Pool(db);
@@ -20,6 +20,7 @@ app.get("/ip", (req,res)=>{
 });
 
 let currentTablesToWatch = [...tablesToWatch];
+let curruntTablesToWatchInNewPage = tablesToWatchInNewPage;
 app.get('/data', async (req, res) => {
   const result = {};
 
@@ -194,7 +195,7 @@ app.post('/execute-sql', async (req, res) => {
 
 app.post('/update-config', async (req, res) => {
   // console.log("config update API 호출");
-  const { dbConfig, tablesToWatch } = req.body;
+  const { dbConfig, tablesToWatch, 아이스크림 } = req.body;
   // console.log(dbConfig);
   try {
     // 기존 pool 종료
@@ -205,6 +206,7 @@ app.post('/update-config', async (req, res) => {
 
     // 업데이트 반영
     currentTablesToWatch = tablesToWatch;
+    curruntTablesToWatchInNewPage = 아이스크림;
     res.json({ message: 'Config updated successfully' });
   } catch (err) {
     console.error(err);
@@ -224,6 +226,7 @@ app.get('/config', (req, res) => {
       password: db.password,
     },
     tablesToWatch: currentTablesToWatch,
+    tablesToWatchInNewPage: curruntTablesToWatchInNewPage,
   });
 });
 
