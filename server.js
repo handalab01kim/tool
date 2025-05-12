@@ -295,26 +295,55 @@ app.delete('/row', async (req, res) => {
 });
 
 // POST /row
+// app.post('/row', async (req, res) => {
+//   const { table, row } = req.body;
+//   if (!table || !row || typeof row !== 'object') {
+//     return res.status(400).json({ error: 'Invalid request' });
+//   }
+
+//   const keys = Object.keys(row);
+//   const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+//   const values = keys.map((key) => row[key]);
+
+//   const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING *`;
+//   // console.log(sql,values);
+
+//   try {
+//     const result = await pool.query(sql, values);
+//     res.json({ inserted: result.rows[0] });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+
 app.post('/row', async (req, res) => {
-  const { table, row } = req.body;
-  if (!table || !row || typeof row !== 'object') {
+  const { table, rows } = req.body;
+
+  if (!table || !Array.isArray(rows) || rows.length === 0) {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const keys = Object.keys(row);
-  const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-  const values = keys.map((key) => row[key]);
-
-  const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING *`;
-  // console.log(sql,values);
+  const fields = Object.keys(rows[0]);
+  const placeholders = fields.map((_, i) => `$${i + 1}`).join(', ');
+  const sql = `INSERT INTO ${table} (${fields.join(', ')}) VALUES (${placeholders})`;
 
   try {
-    const result = await pool.query(sql, values);
-    res.json({ inserted: result.rows[0] });
+    const client = await pool.connect();
+
+    for (const row of rows) {
+      const values = fields.map((f) => row[f]);
+      await client.query(sql, values);
+    }
+
+    client.release();
+    res.json({ inserted: rows.length });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Insert failed:', err);
+    res.status(500).json({ error: 'Insert failed' });
   }
 });
+
   
 
 // 남은 모든 요청(= static 파일로 매칭 안 된 요청)은 index.html로

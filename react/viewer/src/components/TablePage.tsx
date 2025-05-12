@@ -4,6 +4,7 @@ import axios from "axios";
 import { BASE_URL } from "../api/config";
 import { useConfigStore } from '../store/configStore'; 
 import { useToastStore } from '../store/toastStore';
+import InsertModal from "./InsertModal";
 
 type Data = Record<string, Array<Record<string, any>> | { error: string }>;
 
@@ -17,6 +18,12 @@ export default function DataPanel() {
   const { isSqlPanelVisible, isConfigVisible } = useConfigStore(); // for shortcut
 
   const { toasts, addToast, removeToast } = useToastStore();
+
+  const [insertModal, setInsertModal] = useState<{
+    table: string;
+    fields: string[];
+    defaults: Record<string, any>[];
+  } | null>(null);
 
   const fetchData = async () => {
     try {
@@ -110,37 +117,70 @@ export default function DataPanel() {
   };
 
 
-  const handleAddRow = async (table: string, rows: any[]) => {
-    if (!rows || rows.length === 0) return;
+  // const handleAddRow = async (table: string, rows: any[]) => {
+  //   if (!rows || rows.length === 0) return;
 
-    const firstRow = rows[0];
-    const newRow: Record<string, any> = {};
+  //   const firstRow = rows[0];
+  //   const newRow: Record<string, any> = {};
 
-    for (const key of Object.keys(firstRow)) {
-      // 간단한 규칙: id → null, number → 0, string → '', boolean → false
-      const val = firstRow[key];
-      if (typeof val === 'number') {
-        newRow[key] = 0;
-      } else if (typeof val === 'boolean') {
-        newRow[key] = false;
-      } else if (typeof val === 'string') {
-        newRow[key] = '';
-      } else {
-        newRow[key] = null;
+  //   for (const key of Object.keys(firstRow)) {
+  //     // 간단한 규칙: id → null, number → 0, string → '', boolean → false
+  //     const val = firstRow[key];
+  //     if (typeof val === 'number') {
+  //       newRow[key] = 0;
+  //     } else if (typeof val === 'boolean') {
+  //       newRow[key] = false;
+  //     } else if (typeof val === 'string') {
+  //       newRow[key] = '';
+  //     } else {
+  //       newRow[key] = null;
+  //     }
+  //   }
+  //   try {
+  //     table = table.split("/")[0];
+  //     await axios.post(`${BASE_URL}/row`, {
+  //       table,
+  //       row: newRow,
+  //     });
+  //     fetchData();
+  //   } catch (err) {
+  //     // console.error("Add row failed:", err);
+  //     addToast("Add failed!", false);
+  //   }
+  // };
+
+  const handleInsertClick = (table: string, rows: any[], selected: Set<any>) => {
+    const fields = Object.keys(rows[0] || {});
+    const defaults = [...selected]
+      .map(id => rows.find(r => r[fields[0]] === id))
+      .filter(Boolean)
+      .map(row => ({ ...row }));
+
+    if (defaults.length === 0) {
+      // before: const formData = Object.fromEntries(fields.map(k => [k, ""]));
+      const formData: Record<string, string> = {};
+      for (let i = 0; i < fields.length; i++) {
+        formData[fields[i]] = "";
       }
+      defaults.push(formData);
     }
+
+    setInsertModal({ table, fields, defaults });
+  };
+  const handleInsertSubmit = async (table: string, rows: Record<string, any>[]) => {
     try {
       table = table.split("/")[0];
-      await axios.post(`${BASE_URL}/row`, {
-        table,
-        row: newRow,
-      });
+      await axios.post(`${BASE_URL}/row`, { table, rows });
+      addToast("Inserted successfully", true);
+      setInsertModal(null);
       fetchData();
-    } catch (err) {
-      // console.error("Add row failed:", err);
-      addToast("Add failed!", false);
+    } catch {
+      addToast("Insert failed", false);
     }
   };
+  
+
+
 
 
   // ESC shortcut
@@ -193,7 +233,7 @@ export default function DataPanel() {
               ) : (
                   <>
                     {Array.isArray(rows) && (
-                      <AddBtn onClick={() => handleAddRow(table, rows)}>new</AddBtn>
+                      <AddBtn onClick={() => handleInsertClick(table, rows, new Set())}>new</AddBtn>
                     )}
                     <DeleteBtn onClick={() => toggleSelectMode(table)}>🗑</DeleteBtn>
                   </>
@@ -261,6 +301,16 @@ export default function DataPanel() {
           )}
         </TableBlock>
       ))}
+      {insertModal && (
+        <InsertModal
+          table={insertModal.table}
+          fields={insertModal.fields}
+          defaultRows={insertModal.defaults}
+          onClose={() => setInsertModal(null)}
+          onSubmit={(rows) => handleInsertSubmit(insertModal.table, rows)}
+        />
+      )}
+
     </Wrapper>
   );
 }
