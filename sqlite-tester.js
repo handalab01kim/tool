@@ -21,12 +21,3 @@ const db = new sqlite3.Database('dbconfig.db');
     
 //     console.log("SQLITE query result: ",rows);
 // });
-
-db.all("select * from dbs", (err, rows)=>{
-    if(err){
-        console.log("SQLITE query failed!! ", err);
-        return;
-    }
-    
-    console.log("SQLITE query result: ",rows);
-});
