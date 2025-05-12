@@ -3,6 +3,8 @@ import styled from "styled-components";
 import axios from "axios";
 import { BASE_URL } from "../api/config";
 import { useConfigStore } from '../store/configStore'; 
+import { useToastStore } from '../store/toastStore';
+
 type Data = Record<string, Array<Record<string, any>> | { error: string }>;
 
 export default function DataPanel() {
@@ -14,6 +16,7 @@ export default function DataPanel() {
   
   const { isSqlPanelVisible, isConfigVisible } = useConfigStore(); // for shortcut
 
+  const { toasts, addToast, removeToast } = useToastStore();
 
   const fetchData = async () => {
     try {
@@ -59,7 +62,8 @@ export default function DataPanel() {
       setEditingCell(null);
       fetchData();
     } catch (err) {
-      console.error("Update failed:", err);
+      // console.error("Update failed:", err);
+      addToast("Update failed!", false);
     }
   };
 
@@ -97,7 +101,8 @@ export default function DataPanel() {
       });
       fetchData();
     } catch (err) {
-      console.error("Delete failed:", err);
+      // console.error("Delete failed:", err);
+      addToast("Deletion failed!", false);
     } finally {
       setSelectMode((prev) => ({ ...prev, [table]: false }));
       setSelectedRows((prev) => ({ ...prev, [table]: new Set() }));
@@ -132,7 +137,8 @@ export default function DataPanel() {
       });
       fetchData();
     } catch (err) {
-      console.error("Add row failed:", err);
+      // console.error("Add row failed:", err);
+      addToast("Add failed!", false);
     }
   };
 
