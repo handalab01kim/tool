@@ -2,11 +2,25 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
-const { db, tablesToWatch, tablesToWatchInNewPage } = require('./config');
+// const { db, tablesToWatch, tablesToWatchInNewPage } = require('./config');
+const {getConfig, postConfig} = require("./sqlite");
 
 const app = express();
-let pool = new Pool(db);
 const PORT = 5000;
+
+let currentTablesToWatch;
+let curruntTablesToWatchInNewPage;
+let dbPassword;
+let dbHost;
+
+(async () => { // dbconfig data (from sqlite)
+  const { db, tablesToWatch, tablesToWatchInNewPage } = await getConfig();
+  pool = new Pool(db);
+  dbPassword = db.password;
+  dbHost = db.host;
+  currentTablesToWatch = [...tablesToWatch];
+  curruntTablesToWatchInNewPage = tablesToWatchInNewPage;
+})();
 
 app.use(cors());
 app.use(express.static('public/dist')); // index.html
@@ -16,11 +30,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));  
 
 app.get("/ip", (req,res)=>{
-  res.send(db.host);
+  res.send(dbHost);
 });
 
-let currentTablesToWatch = [...tablesToWatch];
-let curruntTablesToWatchInNewPage = tablesToWatchInNewPage;
 app.get('/data', async (req, res) => {
   const result = {};
 
@@ -195,7 +207,7 @@ app.post('/execute-sql', async (req, res) => {
 
 app.post('/update-config', async (req, res) => {
   // console.log("config update API 호출");
-  const { dbConfig, tablesToWatch, 아이스크림 } = req.body;
+  const { dbConfig, tablesToWatch, tablesToWatchInNewPage } = req.body;
   // console.log(dbConfig);
   try {
     // 기존 pool 종료
@@ -204,9 +216,14 @@ app.post('/update-config', async (req, res) => {
     pool = new Pool(dbConfig);
     await pool.query('SELECT 1'); // 연결 테스트
 
+    tabesToWatchString = tablesToWatch.join(",");
+    postConfig(dbConfig, tabesToWatchString, tablesToWatchInNewPage)
+    .then(res => console.log("SQLITE dbconfig updated:", res))
+    .catch(err => console.error("SQLITE dbconfig update failed:", err));
+
     // 업데이트 반영
     currentTablesToWatch = tablesToWatch;
-    curruntTablesToWatchInNewPage = 아이스크림;
+    curruntTablesToWatchInNewPage = tablesToWatchInNewPage;
     res.json({ message: 'Config updated successfully' });
   } catch (err) {
     console.error(err);
@@ -223,7 +240,7 @@ app.get('/config', (req, res) => {
       port: pool.options.port,
       user: pool.options.user,
       database: pool.options.database,
-      password: db.password,
+      password: dbPassword,
     },
     tablesToWatch: currentTablesToWatch,
     tablesToWatchInNewPage: curruntTablesToWatchInNewPage,

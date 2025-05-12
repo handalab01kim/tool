@@ -31,7 +31,6 @@ export default function ConfigPanel({ onToast, onIpUpdate }: ConfigPanelProps) {
     axios.get(`${BASE_URL}/config`)
       .then(res => {
         const { dbConfig, tablesToWatch, tablesToWatchInNewPage } = res.data;
-        console.log(tablesToWatchInNewPage)
         const safeDbConfig = dbConfig || {};
         const safeTables = Array.isArray(tablesToWatch) ? tablesToWatch : [];
 
