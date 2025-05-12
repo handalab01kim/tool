@@ -247,7 +247,51 @@ app.get('/config', (req, res) => {
   });
 });
 
+// 수정 (PUT /row)
+app.put('/row', async (req, res) => {
+  const { table, old, row } = req.body;
+  if (!table || !old || !row) return res.status(400).json({ error: 'Invalid request' });
+  
+  // const fields = Object.keys(row).filter(key => key !== primary);
+  const fields = Object.keys(row);
+  const setClause = fields.map((key, i) => `${key} = $${i + 1}`).join(', ');
+  const values = fields.map(key => row[key]);
+  
+  const whereKeys = Object.keys(old);
+  const whereClause = whereKeys.map((key, i) => `${key} = $${fields.length + i + 1}`).join(' AND ');
+  const whereValues = whereKeys.map(k => old[k]);
+  
+  const sql = `UPDATE ${table} SET ${setClause} WHERE ${whereClause}`;
+  
+  // const sql = `UPDATE ${table} SET ${setClause} WHERE ${primary} = $${fields.length + 1}`;
+  // values.push(row[primary]); // primary 값은 마지막에 추가
+  
+  try {
+    // const result = await pool.query(sql, values);
+    const result = await pool.query(sql, [...values, ...whereValues]);
+    res.json({ updated: result.rowCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
+// 삭제 (DELETE /row)
+app.delete('/row', async (req, res) => {
+  const { table, primary, values } = req.body;
+  if (!table || !primary || !Array.isArray(values)) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+  const sql = `DELETE FROM ${table} WHERE ${primary} IN (${placeholders})`;
+
+  try {
+    const result = await pool.query(sql, values);
+    res.json({ deleted: result.rowCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
   
 
 // 남은 모든 요청(= static 파일로 매칭 안 된 요청)은 index.html로

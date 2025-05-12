@@ -7,68 +7,174 @@ type Data = Record<string, Array<Record<string, any>> | { error: string }>;
 
 export default function DataPanel() {
   const [data, setData] = useState<Data | null>(null);
+  const [editingCell, setEditingCell] = useState<{ table: string; rowIdx: number; key: string } | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const [selectMode, setSelectMode] = useState<Record<string, boolean>>({});
+  const [selectedRows, setSelectedRows] = useState<Record<string, Set<any>>>({});
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/data`);
+      setData(res.data);
+    } catch (err) {
+      console.error("failed to load data:", err);
+    }
+  };
 
   useEffect(() => {
-    let intervalId: number;
-
-    // const fetchData = async () => {
-    //   try {
-    //     const res = await fetch(`${BASE_URL}/data`);
-    //     const json = await res.json();
-    //     setData(json);
-    //   } catch (err) {
-    //     console.error("failed to load data:", err);
-    //   }
-    // };
-    const fetchData = async () => {
-        try {
-          const res = await axios.get(`${BASE_URL}/data`);
-          setData(res.data);
-        } catch (err) {
-          console.error("failed to load data:", err);
-        }
-    };
-
     fetchData();
-    intervalId = setInterval(fetchData, 100);
-
+    const intervalId = setInterval(fetchData, 200);
     return () => clearInterval(intervalId);
   }, []);
+
+  const handleCellClick = (table: string, rowIdx: number, key: string, value: any) => {
+    setEditingCell({ table, rowIdx, key });
+    setEditValue(value);
+  };
+
+  const handleCellBlur = async () => {
+    if (!data || !editingCell) return;
+    const { table, rowIdx, key } = editingCell;
+    const row = (data[table] as any[])[rowIdx];
+    const primaryKey = Object.keys(row)[0]; // 첫 번째 컬럼을 기본키로 가정
+
+    if (row[key] === editValue) {
+      setEditingCell(null);
+      return;
+    }
+
+    try {
+      await axios.put(`${BASE_URL}/row`, {
+        table,
+        // primary: primaryKey,
+        old: {...row},
+        row: {
+          ...row,
+          [key]: editValue
+        }
+      });
+      setEditingCell(null);
+      fetchData();
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
+  };
+
+  const toggleRowSelection = (table: string, id: any) => {
+    setSelectedRows((prev) => {
+      const set = new Set(prev[table] || []);
+      set.has(id) ? set.delete(id) : set.add(id);
+      return { ...prev, [table]: set };
+    });
+  };
+
+  const toggleSelectMode = (table: string) => {
+    setSelectMode((prev) => ({ ...prev, [table]: !prev[table] }));
+    setSelectedRows((prev) => ({ ...prev, [table]: new Set() }));
+  };
+
+  const handleDeleteSelected = async (table: string) => {
+    const confirmDelete = window.confirm("정말로 선택한 행을 삭제하시겠습니까?");
+    if (!confirmDelete || !data) return;
+
+    const rowData = data[table];
+    if (!Array.isArray(rowData) || rowData.length === 0) return;
+    const primaryKey = Object.keys(rowData[0])[0]; // warn !
+    const ids = Array.from(selectedRows[table] || []);
+    if (ids.length === 0) return;
+
+    try {
+      await axios.delete(`${BASE_URL}/row`, {
+        data: {
+          table,
+          primary: primaryKey,
+          values: ids,
+        },
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setSelectMode((prev) => ({ ...prev, [table]: false }));
+      setSelectedRows((prev) => ({ ...prev, [table]: new Set() }));
+    }
+  };
 
   if (!data) return <Wrapper>Loading...</Wrapper>;
 
   return (
     <Wrapper>
-      {Object.entries(data).map(([tableName, rows]) => (
-        <TableBlock key={tableName}>
-          <TableTitle>{tableName.split("/")[0]}</TableTitle>
+      {Object.entries(data).map(([table, rows]) => (
+        <TableBlock key={table}>
+          <TableHeader>
+            <TableTitle>{table}</TableTitle>
+            <ActionArea>
+              {selectMode[table] ? (
+                  <>
+                    <DeleteBtn onClick={() => handleDeleteSelected(table)}>Run</DeleteBtn>
+                    <CancelBtn onClick={() => toggleSelectMode(table)}>❌</CancelBtn>
+                  </>
+              ) : (
+                  <DeleteBtn onClick={() => toggleSelectMode(table)}>🗑</DeleteBtn>
+              )}
+            </ActionArea>
+          </TableHeader>
+
+
           {Array.isArray(rows) && rows.length > 0 ? (
             <StyledTable>
               <thead>
                 <tr>
-                  {Object.keys(rows[0]).map((header) => (
-                    <Th key={header}>{header}</Th>
+                  {selectMode[table] && <Th></Th>}
+                  {Object.keys(rows[0]).map((key) => (
+                    <Th key={key}>{key}</Th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, idx) => (
-                  <tr key={idx}>
-                    {Object.values(row).map((cell, i) => (
-                      <Td key={i}>
-                      {cell === null || cell === undefined
-                        ? "null"
-                        : typeof cell === "boolean"
-                        ? cell.toString()
-                        : cell}
-                    </Td>
-                    ))}
-                  </tr>
-                ))}
+                {rows.map((row, rowIdx) => {
+                  const primaryKey = Object.keys(row)[0];
+                  const primaryVal = row[primaryKey];
+
+                  return (
+                    <tr key={rowIdx}>
+                      {selectMode[table] && (
+                        <Td>
+                          <input
+                            type="checkbox"
+                            checked={selectedRows[table]?.has(primaryVal) || false}
+                            onChange={() => toggleRowSelection(table, primaryVal)}
+                          />
+                        </Td>
+                      )}
+                      {Object.entries(row).map(([key, value]) => (
+                        <Td
+                          key={key}
+                          onClick={() => handleCellClick(table, rowIdx, key, value)}
+                        >
+                          {editingCell &&
+                          editingCell.table === table &&
+                          editingCell.rowIdx === rowIdx &&
+                          editingCell.key === key ? (
+                            <input
+                              autoFocus
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={handleCellBlur}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleCellBlur();
+                              }}
+                            />
+                          ) : (
+                            value?.toString() || "null"
+                          )}
+                        </Td>
+                      ))}
+                    </tr>
+                  );
+                })}
               </tbody>
             </StyledTable>
-          ) : "error" in rows ? (
-            <ErrorMsg>Error: {rows.error}</ErrorMsg>
           ) : (
             <p>No data</p>
           )}
@@ -91,6 +197,12 @@ const TableBlock = styled.div`
   min-width: 300px;
   max-width: 100%;
   overflow-x: auto;
+`;
+
+const TableHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 const TableTitle = styled.h2`
@@ -117,8 +229,37 @@ const Td = styled.td`
   border: 1px solid #333;
   padding: 0.5rem;
   white-space: nowrap;
+  cursor: pointer;
 `;
 
-const ErrorMsg = styled.p`
-  color: red;
+const DeleteBtn = styled.button`
+  background: crimson;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+
+  &:hover {
+    background: darkred;
+  }
+`;
+
+const ActionArea = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const CancelBtn = styled.button`
+  background: #555;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background: #777;
+  }
 `;
