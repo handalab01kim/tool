@@ -12,6 +12,7 @@ let currentTablesToWatch;
 let curruntTablesToWatchInNewPage;
 let dbPassword;
 let dbHost;
+let pool;
 
 (async () => { // dbconfig data (from sqlite)
   const { db, tablesToWatch, tablesToWatchInNewPage } = await getConfig();
@@ -203,17 +204,30 @@ app.post('/execute-sql', async (req, res) => {
 });
 
 
-
+let isPoolEnded = false;
+let isEnding = false;
 
 app.post('/update-config', async (req, res) => {
   // console.log("config update API 호출");
   const { dbConfig, tablesToWatch, tablesToWatchInNewPage } = req.body;
   // console.log(dbConfig);
   try {
-    // 기존 pool 종료
-    await pool.end();
+    // 동시 요청 방지
+    if (isEnding) {
+      return res.status(429).json({ message: 'Pool is currently being reconfigured. Please try again shortly.' });
+    }
+    
+    isEnding = true;
+
+    if (!isPoolEnded) {
+      await pool.end(); // 이전 pool 종료
+      isPoolEnded = true;
+    }
+
     // 새로운 연결
     pool = new Pool(dbConfig);
+    isPoolEnded = false;
+
     await pool.query('SELECT 1'); // 연결 테스트
 
     tabesToWatchString = tablesToWatch.join(",");
@@ -228,6 +242,8 @@ app.post('/update-config', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to update config', error: err.message });
+  } finally {
+    isEnding = false; // 플래그 해제
   }
 });
 
@@ -251,27 +267,36 @@ app.get('/config', (req, res) => {
 app.put('/row', async (req, res) => {
   const { table, old, row } = req.body;
   if (!table || !old || !row) return res.status(400).json({ error: 'Invalid request' });
-  
-  // const fields = Object.keys(row).filter(key => key !== primary);
+
   const fields = Object.keys(row);
-  const setClause = fields.map((key, i) => `${key} = $${i + 1}`).join(', ');
-  const values = fields.map(key => row[key]);
-  
+  const setClause = fields.map((key, i) => `"${key}" = $${i + 1}`).join(', ');
+  const setValues = fields.map((key) => row[key]);
+
   const whereKeys = Object.keys(old);
-  const whereClause = whereKeys.map((key, i) => `${key} = $${fields.length + i + 1}`).join(' AND ');
-  const whereValues = whereKeys.map(k => old[k]);
-  
-  const sql = `UPDATE ${table} SET ${setClause} WHERE ${whereClause}`;
-  
-  // const sql = `UPDATE ${table} SET ${setClause} WHERE ${primary} = $${fields.length + 1}`;
-  // values.push(row[primary]); // primary 값은 마지막에 추가
-  
-  // console.log(sql,values);
+  let whereClauseParts = [];
+  let whereValues = [];
+  let paramIndex = fields.length + 1;
+
+  whereKeys.forEach((key) => {
+    if (old[key] === null || old[key] === undefined) {
+      whereClauseParts.push(`"${key}" IS NULL`);
+    } else {
+      whereClauseParts.push(`"${key}" = $${paramIndex++}`);
+      whereValues.push(old[key]);
+    }
+  });
+
+  const sql = `UPDATE "${table}" SET ${setClause} WHERE ${whereClauseParts.join(' AND ')}`;
+  const values = [...setValues, ...whereValues];
+
+  // console.log("update sql:", sql);
+  // console.log("values:", values);
+
   try {
-    // const result = await pool.query(sql, values);
-    const result = await pool.query(sql, [...values, ...whereValues]);
+    const result = await pool.query(sql, values);
     res.json({ updated: result.rowCount });
   } catch (err) {
+    console.error("Update failed:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -280,33 +305,40 @@ app.put('/row', async (req, res) => {
 app.delete('/row', async (req, res) => {
   const { table, rows } = req.body;
 
-  if (!table || !Array.isArray(rows)) {
+  if (!table || !Array.isArray(rows) || rows.length === 0) {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  // const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
-  // const sql = `DELETE FROM ${table} WHERE ${primary} IN (${placeholders})`;
-  // // console.log(sql,values);
+  const keys = Object.keys(rows[0]); // 모든 row가 같은 구조라고 가정
+  const conditions = [];
+  const values = [];
+  let paramIndex = 1;
 
-  const keys = Object.keys(rows[0]); // 모든 row가 같은 key 구조라 가정
-  let values = [];
-  let conditions = [];
-
-  rows.forEach((row, i) => {
-    const cond = keys.map((key, j) => `"${key}" = $${i * keys.length + j + 1}`).join(' AND ');
-    conditions.push(`(${cond})`);
-    values.push(...keys.map(key => row[key]));
+  rows.forEach((row) => {
+    const clause = keys.map((key) => {
+      if (row[key] === null || row[key] === undefined) {
+        return `"${key}" IS NULL`;
+      } else {
+        values.push(row[key]);
+        return `"${key}" = $${paramIndex++}`;
+      }
+    }).join(' AND ');
+    conditions.push(`(${clause})`);
   });
 
   const sql = `DELETE FROM "${table}" WHERE ${conditions.join(' OR ')}`;
+  // console.log("delete sql:", sql);
+  // console.log("values:", values);
 
   try {
     const result = await pool.query(sql, values);
     res.json({ deleted: result.rowCount });
   } catch (err) {
+    console.error('Delete failed:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // POST /row
 // app.post('/row', async (req, res) => {
