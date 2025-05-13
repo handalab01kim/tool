@@ -90,7 +90,7 @@ const ModalBox = styled.div`
   color: white;
   padding: 1rem;
   border-radius: 10px;
-  min-width: 600px;
+  min-width: 300px;
   max-height: 80vh;
   overflow-y: auto;
   position: absolute;
@@ -112,6 +112,7 @@ const CloseBtn = styled.button`
   border: none;
   padding: 0 0.5rem;
   cursor: pointer;
+  border-radius: 2px;
 `;
 
 const Content = styled.div`
@@ -120,21 +121,22 @@ const Content = styled.div`
 `;
 
 const RowBlock = styled.div`
-  border-bottom: 1px solid #444;
+  // border-bottom: 1px solid #444;
   margin-bottom: 1rem;
-  padding-bottom: 1rem;
+  // padding-bottom: 1rem;
 `;
 
 const Field = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.5rem;
+  margin: 0.4rem 0.075rem;
+  // margin-top: 0.4rem;
 
   input {
     background: #222;
     color: white;
     padding: 0.25rem;
-    border: 1px solid #444;
+    border: 2px solid #444;
   }
 `;
 
