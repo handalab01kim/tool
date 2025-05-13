@@ -59,7 +59,6 @@ export default function InsertModal({ table, fields, defaultRows, onClose, onSub
   });
 
   return (
-    <Overlay>
       <ModalBox id="insert-modal">
         <Header onMouseDown={handleMouseDown}>
           <strong>{table} - Insert</strong>
@@ -83,19 +82,8 @@ export default function InsertModal({ table, fields, defaultRows, onClose, onSub
         </Content>
         <SubmitBtn onClick={() => onSubmit(rows)}>Submit</SubmitBtn>
       </ModalBox>
-    </Overlay>
   );
 }
-
-const Overlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-`;
 
 const ModalBox = styled.div`
   background: #111;

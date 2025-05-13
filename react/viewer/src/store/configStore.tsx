@@ -28,6 +28,9 @@ interface ConfigState {
   setIsSqlPanelVisible: (visible: boolean) => void;
   setIsConfigVisible: (visible: boolean) => void;
 
+  isInsertPanelVisible: boolean;
+  setIsInsertPanelVisible: (visible: boolean) => void;
+
 }
 
 export const useConfigStore = create<ConfigState>((set) => ({
@@ -66,4 +69,6 @@ export const useConfigStore = create<ConfigState>((set) => ({
   setIsSqlPanelVisible: (visible) => set({ isSqlPanelVisible: visible }),
   setIsConfigVisible: (visible) => set({ isConfigVisible: visible }),
 
+  isInsertPanelVisible: false,
+  setIsInsertPanelVisible: (visible) => set({ isInsertPanelVisible: visible }),
 }));

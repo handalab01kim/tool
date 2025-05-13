@@ -19,7 +19,7 @@ export default function(){
   // const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
   // const [isConfigVisible, setIsConfigVisible] = useState<boolean>(false); // config 창
 
-  const { isSqlPanelVisible, setIsSqlPanelVisible, isConfigVisible, setIsConfigVisible, tableRoutes } = useConfigStore(); // for panels & menu buttons
+  const { isSqlPanelVisible, setIsSqlPanelVisible, isConfigVisible, setIsConfigVisible, tableRoutes, isInsertPanelVisible } = useConfigStore(); // for panels & menu buttons
 
 
   const { toasts, addToast, removeToast } = useToastStore();
@@ -134,7 +134,7 @@ export default function(){
   // Tab / Shift+Tab으로 탭 전환
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isConfigVisible||isSqlPanelVisible) return; // !! ConfigPanel 열려 있으면 페이지 전환 금지
+      if (isConfigVisible||isSqlPanelVisible||isInsertPanelVisible) return; // !! ConfigPanel 열려 있으면 페이지 전환 금지
 
       const staticPaths = ['/'];
       const dynamicPaths = tableRoutes.map(r => r.path);
@@ -155,7 +155,7 @@ export default function(){
   
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [urlLocation.pathname, navigate, isConfigVisible, tableRoutes]);
+  }, [urlLocation.pathname, navigate, isConfigVisible, tableRoutes, isInsertPanelVisible]);
   
 
   return (

@@ -15,7 +15,7 @@ export default function DataPanel() {
   const [selectMode, setSelectMode] = useState<Record<string, boolean>>({});
   const [selectedRows, setSelectedRows] = useState<Record<string, Set<any>>>({});
   
-  const { isSqlPanelVisible, isConfigVisible } = useConfigStore(); // for shortcut
+  const { isSqlPanelVisible, isConfigVisible, isInsertPanelVisible, setIsInsertPanelVisible } = useConfigStore(); // for shortcut
 
   const { toasts, addToast, removeToast } = useToastStore();
 
@@ -166,6 +166,7 @@ export default function DataPanel() {
     }
 
     setInsertModal({ table, fields, defaults });
+    setIsInsertPanelVisible(true);
   };
   const handleInsertSubmit = async (table: string, rows: Record<string, any>[]) => {
     try {
@@ -173,6 +174,7 @@ export default function DataPanel() {
       await axios.post(`${BASE_URL}/row`, { table, rows });
       addToast("Inserted successfully", true);
       setInsertModal(null);
+      setIsInsertPanelVisible(false);
       fetchData();
     } catch {
       addToast("Insert failed", false);
@@ -187,6 +189,9 @@ export default function DataPanel() {
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isSqlPanelVisible && !isConfigVisible) {
+        if(isInsertPanelVisible){
+          setInsertModal(null);
+        }
         // ESC 키로 편집 모드 취소
         // if(editingCell!=null){
         setEditingCell(null);      // 편집 상태 해제
@@ -211,7 +216,7 @@ export default function DataPanel() {
     return () => {
       document.removeEventListener("keydown", handleEscKey);  // cleanup
     };
-  }, [isSqlPanelVisible, isConfigVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
+  }, [isSqlPanelVisible, isConfigVisible, isInsertPanelVisible]);  // isSqlPanelVisible 상태가 바뀔 때마다 리스너가 반영됨
   
 
 
@@ -302,6 +307,8 @@ export default function DataPanel() {
         </TableBlock>
       ))}
       {insertModal && (
+        <Overlay onClick={()=>setInsertModal(null)}>
+            <div onClick={(e) => e.stopPropagation()}>
         <InsertModal
           table={insertModal.table}
           fields={insertModal.fields}
@@ -309,11 +316,22 @@ export default function DataPanel() {
           onClose={() => setInsertModal(null)}
           onSubmit={(rows) => handleInsertSubmit(insertModal.table, rows)}
         />
+            </div>
+        </Overlay>
       )}
 
     </Wrapper>
   );
 }
+const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+`;
 
 const Wrapper = styled.div`
   display: flex;
