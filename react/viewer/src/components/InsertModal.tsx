@@ -11,9 +11,9 @@ interface InsertModalProps {
 
 export default function InsertModal({ table, fields, defaultRows, onClose, onSubmit }: InsertModalProps) {
   const [rows, setRows] = useState<Record<string, any>[]>(defaultRows);
-  // const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleChange = (rIdx: number, key: string, value: string) => {
     setRows(prev => {
@@ -22,8 +22,6 @@ export default function InsertModal({ table, fields, defaultRows, onClose, onSub
       return updated;
     });
   };
-
-  const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -46,7 +44,6 @@ export default function InsertModal({ table, fields, defaultRows, onClose, onSub
 
   const handleMouseUp = () => {
     setIsDragging(false);
-    // setDragOffset({ x: 0, y: 0 });
   }
 
   useEffect(() => {

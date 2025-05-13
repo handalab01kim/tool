@@ -14,7 +14,7 @@ const TerminalWrapper = styled.div`
 
 const TerminalLogger: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
-  const [sockets, setSockets] = useState<{ dio?: Socket; all?: Socket; analysis?: Socket }>({});
+  const [sockets, setSockets] = useState<{ socket?: Socket; socket1?: Socket; }>({});
 
   const timezone = (date: Date) => {
     return date.toLocaleString("ko-KR", {
@@ -23,35 +23,37 @@ const TerminalLogger: React.FC = () => {
   };
 
   useEffect(() => {
-    const ANALYSIS_IP = "172.30.1.60"; 
-    const UI_SERVER_IP = "172.30.1.60"; 
+    const SOCKET_HOST = "localhost"; 
+    const SOCKET_PORT = 4001;
+    const SOCKET_EVENTS = ["message", "event"];
 
-    const dio = io(`ws://${ANALYSIS_IP}:4003/output`);
-    const all = io(`ws://${UI_SERVER_IP}:4001/all`);
-    const analysis = io(`ws://${UI_SERVER_IP}:4001/analysis`);
+    const SOCKET_URL = `${SOCKET_HOST}:${SOCKET_PORT}`;
 
-    dio.on("message", (data:any) => {
-      appendLog(`\n\ndio - message [${timezone(new Date())}]\n${JSON.stringify(data, null, 2)}`);
+    const socket = io(`ws://${SOCKET_URL}`, {
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
     });
 
-    all.on("event", (data:any) => {
-      appendLog(`\n\nall - event [${timezone(new Date())}]\n${JSON.stringify(data, null, 2)}`);
+    SOCKET_EVENTS.forEach((eventName)=>{
+      socket.on(eventName, (data:any) => {
+        appendLog(`${SOCKET_URL} - ${eventName}: ${JSON.stringify(data, null, 2)} [${timezone(new Date())}]\n`);
+      });
     });
 
-    all.on("status", (data:any) => {
-      appendLog(`\n\nall - status [${timezone(new Date())}]\n${JSON.stringify(data, null, 2)}`);
+    socket.on("connect", ()=>{
+      appendLog(`${SOCKET_URL} socket on!`);
+      // console.log(`${SOCKET_HOST}:${SOCKET_PORT} socket on!`);
+    });
+    socket.on("disconnect", ()=>{
+      appendLog(`${SOCKET_URL} socket off!`);
+      // console.log(`${SOCKET_HOST}:${SOCKET_PORT} socket off!`);
     });
 
-    analysis.on("message", (data:any) => {
-      appendLog(`\n\nanalysis - message [${timezone(new Date())}]\n${JSON.stringify(data, null, 2)}`);
-    });
-
-    setSockets({ dio, all, analysis });
+    setSockets({ socket });
 
     return () => {
-      dio.disconnect();
-      all.disconnect();
-      analysis.disconnect();
+      socket.disconnect();
     };
   }, []);
 

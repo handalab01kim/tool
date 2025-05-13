@@ -36,28 +36,28 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set) => ({
   dbConfig: {
     host: 'localhost',
-    port: 5433,
-    user: 'handalab',
-    password: 'handalab',
-    database: 'projects',
+    port: 5432,
+    user: 'postgres',
+    password: '0000',
+    database: 'mydb',
   },
   tablesToWatch: [],
-  // tableRoutes: [],
+  tableRoutes: [],
   // 기본 값 설정
-  tableRoutes: [
-    {
-      path: '/logs',
-      table: 'private.system_log',
-      primary: 'idx',
-      button: 'View Logs',
-    },
-    {
-      path: '/events',
-      table: 'history',
-      primary: 'idx',
-      button: 'View Events',
-    },
-  ],
+  // tableRoutes: [
+  //   {
+  //     path: '/logs',
+  //     table: 'private.system_log',
+  //     primary: 'idx',
+  //     button: 'View Logs',
+  //   },
+  //   {
+  //     path: '/events',
+  //     table: 'history',
+  //     primary: 'idx',
+  //     button: 'View Events',
+  //   },
+  // ],
 
   setDbConfig: (config) => set({ dbConfig: config }),
   setTablesToWatch: (tables) => set({ tablesToWatch: tables }),

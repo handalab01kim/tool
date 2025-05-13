@@ -2,40 +2,18 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
-
 import {BASE_URL} from "../api/config";
-
 import ConfigPanel from './ConfigPanel';
 import { useConfigStore } from '../store/configStore'; 
-
 import ToastContainer from './ToastContainer';
 import { useToastStore } from '../store/toastStore';
 
 export default function(){
   const urlLocation = useLocation();  // 현재 경로 추적
   const navigate = useNavigate();  // navigate 사용
-
   const [ip, setIp] = useState<string>("localhost");
-  // const [isSqlPanelVisible, setIsSqlPanelVisible] = useState<boolean>(false);
-  // const [isConfigVisible, setIsConfigVisible] = useState<boolean>(false); // config 창
-
   const { isSqlPanelVisible, setIsSqlPanelVisible, isConfigVisible, setIsConfigVisible, tableRoutes, isInsertPanelVisible } = useConfigStore(); // for panels & menu buttons
-
-
   const { toasts, addToast, removeToast } = useToastStore();
-
-  // const addToast = (message: string, isOk: boolean) => {
-  //   const id = Date.now();
-  //   setToasts(prev => [...prev, { id, message, isOk }]);
-  //   setTimeout(() => {
-  //     setToasts(prev => prev.filter(t => t.id !== id));
-  //   }, 3000);
-  // };
-
-  // const removeToast = (id: number) => {
-  //   setToasts(prev => prev.filter(toast => toast.id !== id));
-  // };
-
 
   const getTitle = () => {
     if (urlLocation.pathname === "/") {
@@ -55,9 +33,6 @@ export default function(){
     return "Real-Time DB";
   };
 
-  // const toggleSqlPanel = () => {
-  //   setIsSqlPanelVisible((prevState) => !prevState);
-  // };
 
   const sendSql = async () => {
     const query = (document.getElementById("sql-input") as HTMLTextAreaElement).value;
@@ -177,7 +152,6 @@ export default function(){
           {button}
         </Button>
       ))}
-      {/* <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={toggleSqlPanel}>Execute SQL</Button> */}
       <Button bgColor="rgba(21, 255, 0, 0.63)" onClick={()=>setIsSqlPanelVisible(true)}>Execute SQL</Button>
 
       <Button bgColor="rgb(199, 202, 0)" onClick={() => setIsConfigVisible(true)}>DB Config</Button>
@@ -210,17 +184,13 @@ export default function(){
           <strong>SQL Query Executer</strong>
           <SqlButton onClick={()=>setIsSqlPanelVisible(false)}>X</SqlButton>
         </SqlHeader>
-        {/* <SqlTextArea placeholder='ex: SELECT now();'>update member set nickname='test' where email='user1@nsk.com' returning *;</SqlTextArea> */}
         <SqlTextArea id="sql-input" placeholder='ex: SELECT now();'/>
         <SqlButton onClick={sendSql}>확인</SqlButton>
       </SqlPanel>
       <Overlay isVisible={isSqlPanelVisible} onClick={()=>setIsSqlPanelVisible(false)}/>
-      {/* <Toast isOk = {isOk} isVisible={toastMessage !== ""}>{toastMessage}</Toast>  */}
     </HeaderWrapper>
   );
 };
-
-// export default Header;
 
 
 const HeaderWrapper = styled.div`
@@ -307,22 +277,6 @@ const SqlButton = styled.button`
   cursor: pointer;
 `;
 
-// const Toast = styled.div<{ isVisible: boolean, isOk: boolean }>`
-//   visibility: ${(props) => (props.isVisible ? 'visible' : 'hidden')};
-//   opacity: ${(props) => (props.isVisible ? 1 : 0)};
-//   min-width: 250px;
-//   background-color: ${(props)=>(props.isOk ? "#0a0":"#c00")};
-//   color: #fff;
-//   text-align: center;
-//   padding: 0.75rem 1rem;
-//   border-radius: 4px;
-//   position: fixed;
-//   top: 1rem;
-//   left: 50%;
-//   transform: translateX(-50%);
-//   z-index: 1000;
-//   transition: opacity 0.3s ease-in-out;
-// `;
 
 const Overlay = styled.div<{ isVisible: boolean }>`
   position: fixed;
@@ -334,9 +288,6 @@ const Overlay = styled.div<{ isVisible: boolean }>`
   z-index: 998;
   display: ${(props) => (props.isVisible ? 'block' : 'none')};
 `;
-
-
-
 
 
 const ConfigPanelWrapper = styled.div`

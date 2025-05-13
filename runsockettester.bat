@@ -1,2 +1,2 @@
-cd C:\Users\handa\repositories\sockettester
+cd C:\Users\{username}\repositories\sockettester
 start node server
