@@ -12,7 +12,7 @@ export default function(){
   const urlLocation = useLocation();  // 현재 경로 추적
   const navigate = useNavigate();  // navigate 사용
   const [ip, setIp] = useState<string>("localhost");
-  const { isSqlPanelVisible, setIsSqlPanelVisible, isConfigVisible, setIsConfigVisible, tableRoutes, isInsertPanelVisible } = useConfigStore(); // for panels & menu buttons
+  const { isSqlPanelVisible, setIsSqlPanelVisible, isConfigVisible, setIsConfigVisible, tableRoutes, isInsertPanelVisible, setTableRoutes } = useConfigStore(); // for panels & menu buttons
   const { toasts, addToast, removeToast } = useToastStore();
 
   const getTitle = () => {
@@ -130,8 +130,26 @@ export default function(){
   
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [urlLocation.pathname, navigate, isConfigVisible, tableRoutes, isInsertPanelVisible]);
+  }, [urlLocation.pathname, navigate, isConfigVisible, isSqlPanelVisible, tableRoutes, isInsertPanelVisible]);
   
+    useEffect(() => {
+    axios.get(`${BASE_URL}/config`)
+      .then(res => {
+        const { tablesToWatchInNewPage } = res.data;
+
+        const parsedRoutes = tablesToWatchInNewPage
+        .split(',')
+        .map((s:string) => s.trim())
+        .map((entry:string) => {
+          let [path, table, primary, button] = entry.split('/');
+          path = "/"+path;
+          return { path, table, primary, button };
+        })
+        .filter((r:{ path: string; table: string; primary: string; button: string }) => r.path && r.table && r.primary && r.button);
+        setTableRoutes(parsedRoutes);
+      })
+      .catch(err => console.error('초기 설정값 불러오기 실패:', err));
+  }, []); // isOpen이 true일 때마다 실행됨
 
   return (
     <HeaderWrapper>

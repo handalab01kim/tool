@@ -390,6 +390,28 @@ app.post('/row', async (req, res) => {
   }
 });
 
+
+app.get("/columns", async (req, res, next) => {
+  const table = req.query.table;
+  if (!table) return res.status(400).json({ error: "Missing table parameter" });
+
+  try {
+    const result = await pool.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = $1
+      ORDER BY ordinal_position
+    `, [table]);
+
+    const columnNames = result.rows.map(r => r.column_name);
+    res.json(columnNames);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+//--------------------------------------------//
   
 
 // 남은 모든 요청(= static 파일로 매칭 안 된 요청)은 index.html로

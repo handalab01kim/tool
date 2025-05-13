@@ -161,8 +161,22 @@ const toggleRowSelection = (table: string, row: any) => {
   //   }
   // };
 
-  const handleInsertClick = (table: string, rows: any[], selected: Set<any>) => {
-    const fields = Object.keys(rows[0] || {});
+  const handleInsertClick = async (table: string, rows: any[], selected: Set<any>) => {
+    // const fields = Object.keys(rows[0] || {});
+    let fields: string[] = [];
+    if (rows.length > 0) {
+      fields = Object.keys(rows[0]);
+    } else {
+      try {
+        const baseTable = table.split("/")[0];
+        const res = await axios.get(`${BASE_URL}/columns`, { params: { table: baseTable } });
+        fields = res.data; // string[]
+      } catch (err) {
+        addToast("Failed to fetch column info", false);
+        return;
+      }
+    }
+
     const defaults = [...selected]
       .map(id => rows.find(r => r[fields[0]] === id))
       .filter(Boolean)
@@ -315,6 +329,8 @@ const toggleRowSelection = (table: string, row: any) => {
                 })}
               </tbody>
             </StyledTable>
+          ) : "error" in rows ? (
+            <ErrorMsg>Error: {rows.error}</ErrorMsg>
           ) : (
             <p>No data</p>
           )}
@@ -440,4 +456,8 @@ const AddBtn = styled.button`
   &:hover {
     background: mediumseagreen;
   }
+`;
+
+const ErrorMsg = styled.p`
+  color: red;
 `;
