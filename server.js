@@ -278,14 +278,28 @@ app.put('/row', async (req, res) => {
 
 // 삭제 (DELETE /row)
 app.delete('/row', async (req, res) => {
-  const { table, primary, values } = req.body;
-  if (!table || !primary || !Array.isArray(values)) {
+  const { table, rows } = req.body;
+
+  if (!table || !Array.isArray(rows)) {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
-  const sql = `DELETE FROM ${table} WHERE ${primary} IN (${placeholders})`;
-  // console.log(sql,values);
+  // const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+  // const sql = `DELETE FROM ${table} WHERE ${primary} IN (${placeholders})`;
+  // // console.log(sql,values);
+
+  const keys = Object.keys(rows[0]); // 모든 row가 같은 key 구조라 가정
+  let values = [];
+  let conditions = [];
+
+  rows.forEach((row, i) => {
+    const cond = keys.map((key, j) => `"${key}" = $${i * keys.length + j + 1}`).join(' AND ');
+    conditions.push(`(${cond})`);
+    values.push(...keys.map(key => row[key]));
+  });
+
+  const sql = `DELETE FROM "${table}" WHERE ${conditions.join(' OR ')}`;
+
   try {
     const result = await pool.query(sql, values);
     res.json({ deleted: result.rowCount });

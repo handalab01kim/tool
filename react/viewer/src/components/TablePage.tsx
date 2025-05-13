@@ -74,13 +74,23 @@ export default function DataPanel() {
     }
   };
 
-  const toggleRowSelection = (table: string, id: any) => {
-    setSelectedRows((prev) => {
-      const set = new Set(prev[table] || []);
-      set.has(id) ? set.delete(id) : set.add(id);
-      return { ...prev, [table]: set };
-    });
-  };
+const toggleRowSelection = (table: string, row: any) => {
+  const rowStr = JSON.stringify(row);
+
+  setSelectedRows((prev) => {
+    const prevSet = prev[table] || new Set<string>();
+    const newSet = new Set(prevSet);
+
+    if (newSet.has(rowStr)) {
+      newSet.delete(rowStr);
+    } else {
+      newSet.add(rowStr);
+    }
+
+    return { ...prev, [table]: newSet };
+  });
+};
+
 
   const toggleSelectMode = (table: string) => {
     setSelectMode((prev) => ({ ...prev, [table]: !prev[table] }));
@@ -93,17 +103,19 @@ export default function DataPanel() {
 
     const rowData = data[table];
     if (!Array.isArray(rowData) || rowData.length === 0) return;
-    const primaryKey = Object.keys(rowData[0])[0]; // warn !
-    const ids = Array.from(selectedRows[table] || []);
-    if (ids.length === 0) return;
+
+    const selected  = selectedRows[table]; 
+    if (!selected || selected.size === 0) return;
     
+    const rowsToDelete = rowData.filter(row => selected.has(JSON.stringify(row)));
+
+
     try {
       table = table.split("/")[0];
       await axios.delete(`${BASE_URL}/row`, {
         data: {
           table,
-          primary: primaryKey,
-          values: ids,
+          rows: rowsToDelete,
         },
       });
       fetchData();
@@ -259,8 +271,8 @@ export default function DataPanel() {
               </thead>
               <tbody>
                 {rows.map((row, rowIdx) => {
-                  const primaryKey = Object.keys(row)[0];
-                  const primaryVal = row[primaryKey];
+                  // const primaryKey = Object.keys(row)[0];
+                  // const primaryVal = row[primaryKey];
 
                   return (
                     <tr key={rowIdx}>
@@ -268,8 +280,8 @@ export default function DataPanel() {
                         <Td>
                           <input
                             type="checkbox"
-                            checked={selectedRows[table]?.has(primaryVal) || false}
-                            onChange={() => toggleRowSelection(table, primaryVal)}
+                            checked={(selectedRows[table]?.has(JSON.stringify(row)) ?? false)}
+                            onChange={() => toggleRowSelection(table, row)}
                           />
                         </Td>
                       )}
