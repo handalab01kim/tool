@@ -188,7 +188,9 @@ const toggleRowSelection = (table: string, row: any) => {
       setInsertModal(null);
       setIsInsertPanelVisible(false);
       fetchData();
-    } catch {
+    } catch(error: any) {
+      const msg = error?.response?.data?.error || "Insert failed(Failure message is undefined)";
+      console.error(`["${table}" table] Insert Error:`, msg);
       addToast("Insert failed", false);
     }
   };

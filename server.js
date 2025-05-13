@@ -354,7 +354,7 @@ app.post('/row', async (req, res) => {
     res.json({ inserted: rows.length });
   } catch (err) {
     console.error('Insert failed:', err);
-    res.status(500).json({ error: 'Insert failed' });
+    res.status(500).json({ error: `Insert failed: ${err}` });
   }
 });
 
