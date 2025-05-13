@@ -23,23 +23,30 @@ export default function InsertModal({ table, fields, defaultRows, onClose, onSub
     });
   };
 
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
-    setDragOffset({ x: e.clientX, y: e.clientY });
+    setDragOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
+
+    const newX = e.clientX - dragOffset.x;
+    const newY = e.clientY - dragOffset.y;
+
     const modal = document.getElementById('insert-modal');
     if (modal) {
-      const dx = e.clientX - dragOffset.x;
-      const dy = e.clientY - dragOffset.y;
-      modal.style.transform = `translate(${dx}px, ${dy}px)`;
+      modal.style.transform = `translate(${newX}px, ${newY}px)`;
     }
+    setPosition({ x: newX, y: newY });
   };
+
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    // setDragOffset({ x: 0, y: 0 });
   }
 
   useEffect(() => {
