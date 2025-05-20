@@ -318,6 +318,7 @@ const toggleRowSelection = (table: string, row: any) => {
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") handleCellBlur();
                               }}
+                              style={{ width: "100%", boxSizing: "border-box" }}
                             />
                           ) : (
                             value?.toString() || "null"
