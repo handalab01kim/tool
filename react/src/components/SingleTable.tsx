@@ -88,11 +88,11 @@ useEffect(() => {
       <Table>
         <colgroup>
           {headers.map((_, idx) =>
-            // idx === 2 ? (
-            //   <col key={idx} style={{ width: "400px" }} />
-            // ) : idx === 3 ? (
-            //   <col key={idx} style={{ width: "60px" }} />
-            // ) : 
+            idx === 2 ? (
+              <col key={idx} style={{ width: "300px" }} />
+            ) : idx === 3 ? (
+              <col key={idx} style={{ width: "60px" }} />
+            ) : 
             (
               <col key={idx} style={{ width: "30px" }} />
             )
