@@ -23,6 +23,23 @@ export default function SingleTable({table, primary}:SignleTableProps) {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  
+  // const headers = Object.keys(rows[0] || {});
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [colWidths, setColWidths] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (rows.length > 0) {
+      const newHeaders = Object.keys(rows[0]);
+      
+      // headers가 비었을 때만 초기화 (1번만 실행됨)
+      if (headers.length === 0) {
+        setHeaders(newHeaders);
+        setColWidths(newHeaders.map(() => 120));
+      }
+    }
+  }, [rows]);
+
 
   const totalPages = Math.ceil(total / limit);
   const maxPagesShown = 10;
@@ -77,17 +94,44 @@ useEffect(() => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [page, totalPages]);
 
+
+  // resizer 핸들러 (표 크기 마우스 조정)
+  const initResize = (e: React.MouseEvent, idx: number) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = colWidths[idx];
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      setColWidths((prev) => {
+        const next = [...prev];
+        next[idx] = Math.max(60, startWidth + delta);  // 최소 60px
+        return next;
+      });
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+
+
   if (isLoading) return <Container>Loading...</Container>;
   if (isError) return <Container>Failed To Get Data</Container>;
   if (!isLoading && rows.length===0) return <Container>No Data</Container>;
   
-  const headers = Object.keys(rows[0] || {});
 
   return (
     <Container>
       <Table>
         <colgroup>
-          {headers.map((_, idx) =>
+        
+          {/* {headers.map((_, idx) =>
             // idx === 2 ? (
             //   <col key={idx} style={{ width: "400px" }} />
             // ) : idx === 3 ? (
@@ -96,12 +140,20 @@ useEffect(() => {
             (
               <col key={idx} style={{ width: "30px" }} />
             )
-          )}
+          )} */}
+          {headers.map((_, idx) => (
+            <col key={idx} style={{ width: colWidths[idx] + "px" }} />
+          ))}
         </colgroup>
         <thead>
           <tr>
-            {headers.map((h) => (
-              <Th key={h}>{h}</Th>
+            {headers.map((h, idx) => (
+              <Th key={h}>
+                {h}
+                <Resizer
+                  onMouseDown={(e) => initResize(e, idx)}
+                />
+              </Th>
             ))}
           </tr>
         </thead>
@@ -177,6 +229,7 @@ const Th = styled.th`
   min-width: 120px;
   position: sticky;
   top: 0;
+  position: relative; /* Resizer 위치 기준 */
 `;
 
 const Td = styled.td`
@@ -205,4 +258,15 @@ const PageButton = styled.button<{ active?: boolean }>`
   &:hover {
     background: #555;
   }
+`;
+
+const Resizer = styled.div`
+  display: inline-block;
+  width: 5px;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: col-resize;
+  z-index: 1;
 `;
