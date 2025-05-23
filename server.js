@@ -14,6 +14,11 @@ let dbPassword;
 let dbHost;
 let pool;
 
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+  // optionally: process.exit(1);
+});
+
 (async () => { // dbconfig data (from sqlite)
   const { db, tablesToWatch, tablesToWatchInNewPage } = await getConfig();
   pool = new Pool(db);

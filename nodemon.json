@@ -1,0 +1,8 @@
+{
+    "watch": ["."],
+    "ext": "js,json",
+    "exec": "node ./server.js",
+    "restartable": "rs",
+    "delay": "2",
+    "exitcrash": false
+}
