@@ -20,8 +20,12 @@ process.on("uncaughtException", (err) => {
 });
 
 (async () => { // dbconfig data (from sqlite)
-  await initializeConfig(); // config(sqlite db) 초기화
-  await checkConfig(); // 초기 config 출력
+  try{
+    await initializeConfig(); // config(sqlite db) 초기화
+    await checkConfig(); // 초기 config 출력
+  } catch(e){
+    console.log("FATAL: sqlite3 db error => " + e);
+  }
 
   const { db, tablesToWatch, tablesToWatchInNewPage } = await getConfig();
   pool = new Pool(db);
@@ -32,7 +36,7 @@ process.on("uncaughtException", (err) => {
 })();
 
 app.use(cors());
-app.use(express.static('public/dist')); // index.html
+app.use(express.static('react/dist')); // index.html
 
 // query string을 받기 위해 필요
 app.use(express.json());  
@@ -216,9 +220,9 @@ let isPoolEnded = false;
 let isEnding = false;
 
 app.post('/update-config', async (req, res) => {
-  console.log("config update API 호출");
+  // console.log("config update API 호출");
   const { dbConfig, tablesToWatch, tablesToWatchInNewPage } = req.body;
-  console.log(dbConfig);
+  // console.log(dbConfig);
   try {
     // 동시 요청 방지
     if (isEnding) {
@@ -424,15 +428,15 @@ app.get("/columns", async (req, res, next) => {
 
 // 남은 모든 요청(= static 파일로 매칭 안 된 요청)은 index.html로
 app.use((req, res, next) => {
-  res.sendFile(path.join(__dirname, 'public', 'dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'react', 'dist', 'index.html'));
 });
 // 버전 이슈로 '*' 안될 수 있음
 // app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, "public", "dist", "index.html"));
+//   res.sendFile(path.join(__dirname, "react", "dist", "index.html"));
 // });
 // '/'은 리액트 내의 / 가 아닌 경로에서 새로 고침 시 접속 안됨
 // app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname, "public", "dist", "index.html"));
+//   res.sendFile(path.join(__dirname, "react", "dist", "index.html"));
 // });
 
 

@@ -5,8 +5,9 @@ services:
       dockerfile: Dockerfile
     image: dbviewer_node
     container_name: dbviewer_node
-    ports: 
-    - "5000:5000"
+    # ports: 
+    # - "5000:5000"
+    network_mode: "host"
     restart: unless-stopped
     volumes:
     - ./:/usr/src/app

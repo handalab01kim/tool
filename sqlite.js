@@ -1,9 +1,11 @@
 const sqlite3 = require('sqlite3').verbose();
 
 // DB 파일 생성
-const db = new sqlite3.Database('dbconfig.db');
+let db;
 
 const initializeConfig = async ()=>{
+  // db = new sqlite3.Database('db-config.db');
+  db = new sqlite3.Database('db-config.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE); // 존재하지 않을 경우에만 생성
   await new Promise((resolve, reject)=>{
     // 테이블 생성
     db.serialize(() => {
@@ -39,6 +41,8 @@ const initializeConfig = async ()=>{
               });
               }
             );
+        } else{
+          resolve(); // 이미 DB 존재함
         }
       });
       // resolve(); -> 동기적 작동 X
