@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 // const { db, tablesToWatch, tablesToWatchInNewPage } = require('./config');
-const {getConfig, postConfig} = require("./sqlite");
+const {initializeConfig, checkConfig, getConfig, postConfig} = require("./sqlite");
 
 const app = express();
 const PORT = 5000;
@@ -20,6 +20,9 @@ process.on("uncaughtException", (err) => {
 });
 
 (async () => { // dbconfig data (from sqlite)
+  await initializeConfig(); // config(sqlite db) 초기화
+  await checkConfig(); // 초기 config 출력
+
   const { db, tablesToWatch, tablesToWatchInNewPage } = await getConfig();
   pool = new Pool(db);
   dbPassword = db.password;
@@ -213,9 +216,9 @@ let isPoolEnded = false;
 let isEnding = false;
 
 app.post('/update-config', async (req, res) => {
-  // console.log("config update API 호출");
+  console.log("config update API 호출");
   const { dbConfig, tablesToWatch, tablesToWatchInNewPage } = req.body;
-  // console.log(dbConfig);
+  console.log(dbConfig);
   try {
     // 동시 요청 방지
     if (isEnding) {

@@ -3,46 +3,62 @@ const sqlite3 = require('sqlite3').verbose();
 // DB 파일 생성
 const db = new sqlite3.Database('dbconfig.db');
 
-// 테이블 생성
-db.serialize(() => {
-  db.run(`
+const initializeConfig = async ()=>{
+  await new Promise((resolve, reject)=>{
+    // 테이블 생성
+    db.serialize(() => {
+      db.run(`
         CREATE TABLE IF NOT EXISTS dbs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            host TEXT NOT NULL,
-            database TEXT NOT NULL,
-            password TEXT NOT NULL,
-            port INTEGER NOT NULL,
-            tables1 TEXT,
-            tables2 TEXT
-        );
-    `);
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user TEXT NOT NULL,
+          host TEXT NOT NULL,
+          database TEXT NOT NULL,
+          password TEXT NOT NULL,
+          port INTEGER NOT NULL,
+          tables1 TEXT,
+          tables2 TEXT
+        );`, (err) => {
+          if (err) return reject("SQLITE - CREATE TABLE 실패: " + err);
+      });
 
-  // 비어있으면 생성
-  db.all("SELECT * FROM dbs", (err, rows) => {
-    if (err) {
-        console.error("SQLITE SELECT ERROR!! " + err);
-        return;
-    }
-    if(rows.length===0){
-        const stmt = db.prepare(`
-            INSERT INTO dbs 
-                (user, host, database, password, port, tables1, tables2) 
-            VALUES
-                (?, ?, ?, ?, ?, ?, ?)`);
-        stmt.run("postgres","localhost","mydb","0000",5432,"member/idx,article/*idx", "logs/private.system_log/idx/View Logs, events/history/idx/View Events");
-        stmt.finalize();
-    }
+      // 비어있으면 생성
+      db.all("SELECT * FROM dbs", (err, rows) => {
+        if (err) return reject("SELECT 실패: " + err);
+        if(rows.length===0){
+            const stmt = db.prepare(`
+                INSERT INTO dbs 
+                    (user, host, database, password, port, tables1, tables2) 
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?)`);
+            stmt.run("postgres","localhost","mydb","0000",5432,"member/idx,article/*idx", "logs/private.system_log/idx/View Logs, events/history/idx/View Events",
+              (err)=> {
+                if (err) return reject("SQLITE - INSERT 실패: " + err);
+                stmt.finalize((err) => {
+                  if (err) return reject("SQLITE - FINALIZE 실패: " + err);
+                  resolve(); // run + finalize 완료 시 resolve -> 동기적 작동 O
+              });
+              }
+            );
+        }
+      });
+      // resolve(); -> 동기적 작동 X
+    });
   });
+}; 
 
-  db.all("select * from dbs", (err, rows)=>{
-    if(err){
-        console.log("SQLITE 초기 데이터 확인 실패");
-        return;
-    }
-    console.log("SQLITE: dbconfig",rows);
+
+const checkConfig = ()=>{
+  return new Promise((resolve, reject)=>{
+    db.all("select * from dbs", (err, rows)=>{
+      if(err){
+          return reject("SQLITE config 데이터 확인 실패: "+err);
+      } else{
+        console.log("SQLITE: dbconfig",rows);
+        resolve();
+      }
+    });
   });
-});
+}
 
 
 const getConfig = ()=>{
@@ -113,9 +129,10 @@ const postConfig = (newDbConfig, newTables1, newTables2)=>{
         });
     });
 };
+// initializeConfig();
 
 exports.default = db;
-module.exports = {getConfig, postConfig};
+module.exports = {initializeConfig, checkConfig, getConfig, postConfig};
 
 // 종료
 // db.close();
