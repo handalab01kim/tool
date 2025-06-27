@@ -36,7 +36,7 @@ export default function DataPanel() {
 
   useEffect(() => {
     fetchData();
-    const intervalId = setInterval(fetchData, 200);
+    const intervalId = setInterval(fetchData, 700);
     return () => clearInterval(intervalId);
   }, []);
 

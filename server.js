@@ -6,7 +6,7 @@ const path = require('path');
 const {initializeConfig, checkConfig, getConfig, postConfig} = require("./sqlite");
 
 const app = express();
-const PORT = 5000;
+const PORT = 5500;
 
 let currentTablesToWatch;
 let curruntTablesToWatchInNewPage;
